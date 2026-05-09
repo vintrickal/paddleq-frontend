@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PaddleQ — Home (Mobile)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Faster+One&family=Dela+Gothic+One&family=Chivo:wght@400;600;700;900&family=Indie+Flower&family=Covered+By+Your+Grace&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paddle-green: rgb(45,119,73);
+    --paddle-green-dark: rgb(34, 95, 58);
+    --paddle-green-soft: rgba(45,119,73,0.10);
+    --ink: #141414;
+    --ink-soft: #5a5a5a;
+    --ink-faint: #8a8a8a;
+    --line: rgba(0,0,0,0.08);
+    --paper: #f3f3ef;
+    --tile: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Chivo", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+  }
+  .stage__caption {
+    text-align: center; margin-top: 16px;
+    font-family: "Covered By Your Grace", cursive;
+    font-size: 18px; color: var(--ink-soft);
+  }
+
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* topbar */
+  .topbar {
+    padding: 58px 18px 10px;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--paper);
+  }
+  .topbar__brand { display: flex; align-items: center; gap: 8px; }
+  .topbar__brand img { width: 30px; height: 26px; object-fit: contain; }
+  .topbar__brand .wordmark {
+    font-family: "Faster One", system-ui;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+  }
+  .topbar__icon {
+    margin-left: auto;
+    width: 36px; height: 36px; border-radius: 12px;
+    border: 1px solid var(--line);
+    background: white;
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+
+  .scroll {
+    flex: 1; overflow-y: auto;
+    padding: 8px 18px 40px;
+  }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  /* hero */
+  .hero {
+    margin: 4px 0 18px;
+  }
+  .hero__greeting {
+    font-family: "Covered By Your Grace", cursive;
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .hero__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 30px;
+    line-height: 1.05;
+    margin: 0 0 10px;
+  }
+  .hero__title em {
+    font-style: normal;
+    color: var(--paddle-green);
+    position: relative;
+    white-space: nowrap;
+  }
+  .hero__title em::after {
+    content: ""; position: absolute; left: -2%; right: -2%; bottom: -3px;
+    height: 7px; background: var(--paddle-green-soft); border-radius: 4px; z-index: -1;
+  }
+  .hero__sub {
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* step label */
+  .step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 700;
+    margin: 22px 0 10px;
+  }
+  .step b {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ink); color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: "Dela Gothic One", system-ui; font-size: 10px;
+  }
+
+  /* mode tiles */
+  .modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mode {
+    appearance: none;
+    background: white;
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 14px 14px;
+    cursor: pointer;
+    text-align: left;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    font-family: inherit;
+    position: relative;
+    min-height: 130px;
+  }
+  .mode.is-active {
+    border-color: var(--paddle-green);
+    background: var(--paddle-green-soft);
+    box-shadow: 0 0 0 3px rgba(45,119,73,0.15);
+  }
+  .mode__icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid var(--line);
+    display: grid; place-items: center;
+    overflow: hidden;
+  }
+  .mode__icon img { width: 70%; height: 70%; object-fit: contain; }
+  .mode__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px; line-height: 1; margin-top: auto;
+  }
+  .mode__sub {
+    font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .mode__check {
+    position: absolute; top: 12px; right: 12px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.18);
+    display: grid; place-items: center;
+    transition: background 160ms ease, border-color 160ms ease;
+    background: white;
+  }
+  .mode.is-active .mode__check {
+    background: var(--paddle-green);
+    border-color: var(--paddle-green);
+  }
+  .mode__check svg { opacity: 0; transition: opacity 160ms ease; }
+  .mode.is-active .mode__check svg { opacity: 1; }
+
+  /* counter */
+  .counter-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .counter-card__lbl {
+    display: flex; flex-direction: column;
+    font-family: "Chivo", system-ui;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .counter-card__lbl small {
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .counter {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .counter button {
+    appearance: none;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--line);
+    background: white;
+    cursor: pointer;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+    color: var(--ink);
+    transition: background 120ms ease, transform 100ms ease;
+  }
+  .counter button:hover:not(:disabled) { background: rgba(0,0,0,0.04); }
+  .counter button:active:not(:disabled) { transform: scale(0.94); }
+  .counter button:disabled { color: rgba(0,0,0,0.2); cursor: not-allowed; }
+  .counter__value {
+    width: 48px; height: 36px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: white;
+    display: grid; place-items: center;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+    transition: transform 200ms cubic-bezier(.2,.7,.2,1.4);
+  }
+  .counter__value.bump { transform: scale(1.12); }
+
+  /* summary tiles */
+  .summary {
+    margin-top: 12px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .summary__tile {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .summary__tile .num {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 20px; line-height: 1;
+  }
+  .summary__tile .lbl {
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-soft);
+    font-weight: 700; margin-top: 4px;
+    display: block;
+  }
+
+  /* CTA bar — fixed bottom */
+  .ctabar {
+    padding: 12px 18px 36px;
+    background: linear-gradient(180deg, rgba(243,243,239,0) 0%, var(--paper) 30%);
+    position: relative;
+  }
+  .cta {
+    appearance: none;
+    width: 100%;
+    height: 60px;
+    border: none;
+    border-radius: 14px;
+    background: var(--paddle-green);
+    color: white;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 16px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    transition: background 160ms ease, transform 100ms ease, box-shadow 160ms ease;
+    box-shadow: 0 4px 0 var(--paddle-green-dark), 0 8px 18px rgba(45,119,73,0.22);
+  }
+  .cta:hover { background: var(--paddle-green-dark); }
+  .cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--paddle-green-dark); }
+  .cta:disabled { background: rgba(0,0,0,0.12); box-shadow: none; cursor: not-allowed; color: rgba(0,0,0,0.4); }
+
+  /* recent card */
+  .recent {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 10px;
+  }
+  .recent__icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--paddle-green-soft);
+    color: var(--paddle-green-dark);
+    display: grid; place-items: center;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .recent__txt {
+    flex: 1; min-width: 0;
+  }
+  .recent__title { font-size: 13px; font-weight: 700; }
+  .recent__sub {
+    font-size: 11px; color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .recent__chev { color: var(--ink-faint); }
+
+  /* confirm modal */
+  .confirm {
+    position: absolute; inset: 0;
+    background: rgba(15, 20, 17, 0.55);
+    display: grid; place-items: center;
+    z-index: 80;
+    backdrop-filter: blur(6px);
+    animation: fadeIn 200ms ease;
+    padding: 16px;
+  }
+  .confirm__card {
+    background: white;
+    width: 100%;
+    border-radius: 22px;
+    padding: 28px 22px 22px;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    animation: pop 320ms cubic-bezier(.2,.7,.2,1.4);
+  }
+  .confirm__check {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--paddle-green);
+    display: grid; place-items: center;
+    margin: 0 auto 14px;
+    box-shadow: 0 0 0 6px rgba(45,119,73,0.15);
+  }
+  .confirm__title { font-family: "Dela Gothic One", system-ui; font-size: 20px; margin: 0 0 6px; }
+  .confirm__body { color: var(--ink-soft); font-size: 13px; line-height: 1.5; margin: 0 0 14px; }
+  .confirm__pill {
+    display: inline-flex; gap: 6px; align-items: center;
+    padding: 6px 12px; border-radius: 999px;
+    background: var(--paddle-green-soft);
+    color: var(--paddle-green-dark);
+    font-weight: 700; font-size: 12px; letter-spacing: 0.04em;
+    margin-bottom: 18px;
+  }
+  .confirm__row { display: flex; gap: 8px; }
+  .confirm__row button {
+    flex: 1; height: 44px;
+    border-radius: 12px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+  }
+  .confirm__row .btn-secondary { background: rgba(0,0,0,0.05); color: var(--ink); }
+  .confirm__row .btn-primary { background: var(--paddle-green); color: white; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "accent": "#2D7749",
+      "showRecent": true,
+      "maxCourts": 8
+    }/*EDITMODE-END*/;
+
+    const Icon = {
+      Check: ({size=12, color="white"}) => <svg width={size} height={size} viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.8 9L10 3.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Arrow: () => <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><path d="M3 11h15M12 5l6 6-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Settings: () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/><path d="M8 1v2M8 13v2M14.5 4.5l-1.7 1M3.2 10.5l-1.7 1M14.5 11.5l-1.7-1M3.2 5.5l-1.7-1M15 8h-2M3 8H1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+      Chev: () => <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><path d="M2 1l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    };
+
+    function App({ t, setTweak }) {
+      useEffect(() => {
+        document.documentElement.style.setProperty("--paddle-green", t.accent);
+      }, [t.accent]);
+
+      const [mode, setMode] = useState("doubles");
+      const [courts, setCourts] = useState(1);
+      const [confirmed, setConfirmed] = useState(false);
+      const [bump, setBump] = useState(false);
+
+      const max = Math.max(1, Math.min(99, t.maxCourts || 8));
+      const setCourtsClamped = (n) => {
+        const next = Math.min(max, Math.max(1, n));
+        setCourts(next);
+        setBump(true);
+        setTimeout(() => setBump(false), 200);
+      };
+
+      const playersPerCourt = mode === "singles" ? 2 : 4;
+      const totalPlayers = playersPerCourt * courts;
+
+      return (
+        <div className="screen" data-screen-label="01 Home (mobile)">
+          <div className="topbar">
+            <div className="topbar__brand">
+              <img src="assets/logo.png" alt="" />
+              <span className="wordmark">PADDLEQ</span>
+            </div>
+            <button className="topbar__icon" aria-label="Settings"><Icon.Settings /></button>
+          </div>
+
+          <div className="scroll">
+            <section className="hero">
+              <div className="hero__greeting">good morning ✦</div>
+              <h1 className="hero__title">Set up your <em>court</em><br/>and play.</h1>
+              <p className="hero__sub">Pick a format, set how many courts you've got, and PaddleQ keeps the rotation going.</p>
+            </section>
+
+            <div className="step"><b>1</b><span>Choose format</span></div>
+            <div className="modes" role="radiogroup" aria-label="Game mode">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === "singles"}
+                className={"mode" + (mode === "singles" ? " is-active" : "")}
+                onClick={() => setMode("singles")}
+              >
+                <span className="mode__check"><Icon.Check /></span>
+                <span className="mode__icon"><img src="assets/singles.png" alt="" /></span>
+                <span className="mode__title">Singles</span>
+                <span className="mode__sub">2 players / court</span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === "doubles"}
+                className={"mode" + (mode === "doubles" ? " is-active" : "")}
+                onClick={() => setMode("doubles")}
+              >
+                <span className="mode__check"><Icon.Check /></span>
+                <span className="mode__icon"><img src="assets/doubles.png" alt="" /></span>
+                <span className="mode__title">Doubles</span>
+                <span className="mode__sub">4 players / court</span>
+              </button>
+            </div>
+
+            <div className="step"><b>2</b><span>How many courts?</span></div>
+            <div className="counter-card">
+              <div className="counter-card__lbl">
+                Courts
+                <small>1 — {max}</small>
+              </div>
+              <div className="counter">
+                <button onClick={() => setCourtsClamped(courts - 1)} disabled={courts <= 1} aria-label="Decrease">−</button>
+                <div className={"counter__value" + (bump ? " bump" : "")} aria-live="polite">{courts}</div>
+                <button onClick={() => setCourtsClamped(courts + 1)} disabled={courts >= max} aria-label="Increase">+</button>
+              </div>
+            </div>
+
+            <div className="summary">
+              <div className="summary__tile">
+                <div className="num">{courts}</div>
+                <div className="lbl">{courts === 1 ? "Court" : "Courts"}</div>
+              </div>
+              <div className="summary__tile">
+                <div className="num">{playersPerCourt}</div>
+                <div className="lbl">Per court</div>
+              </div>
+              <div className="summary__tile">
+                <div className="num">{totalPlayers}</div>
+                <div className="lbl">Players</div>
+              </div>
+            </div>
+
+            {t.showRecent && (
+              <>
+                <div className="step"><b>3</b><span>Or jump back in</span></div>
+                <button className="recent" type="button" onClick={() => setConfirmed(true)}>
+                  <div className="recent__icon">↻</div>
+                  <div className="recent__txt" style={{textAlign: 'left'}}>
+                    <div className="recent__title">Doubles · 4 courts</div>
+                    <div className="recent__sub">Last session · 8 players queued</div>
+                  </div>
+                  <span className="recent__chev"><Icon.Chev /></span>
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="ctabar">
+            <button className="cta" onClick={() => setConfirmed(true)}>
+              Setup court <Icon.Arrow />
+            </button>
+          </div>
+
+          {confirmed && (
+            <div className="confirm" role="dialog" aria-modal="true">
+              <div className="confirm__card">
+                <div className="confirm__check"><Icon.Check size={26} /></div>
+                <h3 className="confirm__title">Court is ready</h3>
+                <p className="confirm__body">
+                  {courts} {courts === 1 ? "court" : "courts"} for {mode}.<br/>
+                  Add players next to start the queue.
+                </p>
+                <div className="confirm__pill">
+                  <Icon.Check size={9} color="rgb(34,95,58)" />
+                  {totalPlayers} player slots open
+                </div>
+                <div className="confirm__row">
+                  <button className="btn-secondary" onClick={() => setConfirmed(false)}>Adjust</button>
+                  <button className="btn-primary" onClick={() => setConfirmed(false)}>Add players</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function Root() {
+      const [t, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+      return (
+        <>
+          <div>
+            <window.IOSDevice width={390} height={812}>
+              <App t={t} setTweak={setTweak} />
+            </window.IOSDevice>
+            <div className="stage__caption">PaddleQ — Home (mobile)</div>
+          </div>
+          <window.TweaksPanel title="Tweaks">
+            <window.TweakSection label="Brand">
+              <window.TweakColor label="Accent" value={t.accent}
+                options={["#2D7749","#0E5FBA","#C24A1E","#1F1F1F","#7A3FB7"]}
+                onChange={(v) => setTweak('accent', v)} />
+            </window.TweakSection>
+            <window.TweakSection label="Layout">
+              <window.TweakSlider label="Max courts" value={t.maxCourts}
+                min={4} max={16} step={1}
+                onChange={(v) => setTweak('maxCourts', v)} />
+              <window.TweakToggle label="Show recent session" value={t.showRecent}
+                onChange={(v) => setTweak('showRecent', v)} />
+            </window.TweakSection>
+          </window.TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+  </script>
+</body>
+</html>

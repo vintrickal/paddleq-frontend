@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PaddleQ — Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Faster+One&family=Dela+Gothic+One&family=Chivo:wght@600;900&family=Indie+Flower&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paddle-green: rgb(45,119,73);
+    --paddle-green-dark: rgb(34, 95, 58);
+    --paddle-green-soft: rgb(45,119,73, 0.08);
+    --ink: rgb(20, 20, 20);
+    --ink-soft: rgb(60, 60, 60);
+    --line: rgb(20,20,20);
+    --paper: #fdfdfb;
+    --tile: #ffffff;
+    --shadow-sm: 0 1px 0 rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 0 rgba(0,0,0,0.05), 0 12px 30px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Chivo", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  #root { min-height: 100vh; }
+
+  /* ---------- TYPE ---------- */
+  .t-wordmark { font-family: "Faster One", system-ui; letter-spacing: 0.02em; }
+  .t-display  { font-family: "Dela Gothic One", system-ui; letter-spacing: 0.01em; }
+  .t-label    { font-family: "Chivo", system-ui; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+  .t-script   { font-family: "Indie Flower", cursive; }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 40px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .header__logo { width: 64px; height: 56px; object-fit: contain; }
+  .header__brand { font-size: 40px; line-height: 1; }
+  .header__nav {
+    margin-left: auto;
+    display: flex; gap: 28px; align-items: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .header__nav a { color: inherit; text-decoration: none; padding: 8px 0; border-bottom: 2px solid transparent; }
+  .header__nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .header__nav a.active { color: var(--ink); border-bottom-color: var(--paddle-green); }
+
+  /* ---------- LAYOUT ---------- */
+  .stage {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 56px 40px 80px;
+  }
+  .hero { text-align: center; margin-bottom: 56px; }
+  .hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 700;
+    padding: 6px 12px; border: 1px solid rgba(0,0,0,0.12); border-radius: 999px;
+    background: white;
+  }
+  .hero__eyebrow::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--paddle-green);
+    box-shadow: 0 0 0 4px rgba(45,119,73,0.15);
+  }
+  .hero__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 64px;
+    line-height: 1.02;
+    margin: 18px auto 14px;
+    max-width: 18ch;
+  }
+  .hero__title em {
+    font-style: normal;
+    color: var(--paddle-green);
+    position: relative;
+    white-space: nowrap;
+  }
+  .hero__title em::after {
+    content: "";
+    position: absolute;
+    left: -4%; right: -4%; bottom: -6px; height: 10px;
+    background: rgba(45,119,73,0.18);
+    border-radius: 6px;
+    z-index: -1;
+  }
+  .hero__sub {
+    color: var(--ink-soft);
+    font-size: 16px;
+    max-width: 56ch;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+
+  /* ---------- CARD ---------- */
+  .card {
+    background: var(--tile);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    padding: 36px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .card__step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .card__step b {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: "Dela Gothic One", system-ui; font-size: 11px;
+  }
+  .card__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 24px;
+    margin: 0 0 22px;
+  }
+
+  /* ---------- MODE TOGGLE ---------- */
+  .modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .mode {
+    appearance: none;
+    background: white;
+    border: 1.5px solid rgba(0,0,0,0.12);
+    border-radius: 14px;
+    padding: 22px 22px;
+    cursor: pointer;
+    text-align: left;
+    display: flex; align-items: center; gap: 18px;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
+    font-family: inherit;
+  }
+  .mode:hover { border-color: rgba(0,0,0,0.4); transform: translateY(-1px); }
+  .mode.is-active {
+    border-color: var(--paddle-green);
+    background: var(--paddle-green-soft);
+    box-shadow: 0 0 0 3px rgba(45,119,73,0.18);
+  }
+  .mode__icon {
+    width: 56px; height: 56px;
+    flex: 0 0 56px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    display: grid; place-items: center;
+    overflow: hidden;
+  }
+  .mode__icon img { width: 70%; height: 70%; object-fit: contain; }
+  .mode__title { font-family: "Dela Gothic One", system-ui; font-size: 20px; line-height: 1; margin-bottom: 6px; }
+  .mode__sub { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.04em; }
+  .mode__check {
+    margin-left: auto;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.18);
+    display: grid; place-items: center;
+    transition: background 160ms ease, border-color 160ms ease;
+    flex-shrink: 0;
+  }
+  .mode.is-active .mode__check {
+    background: var(--paddle-green);
+    border-color: var(--paddle-green);
+  }
+  .mode__check svg { opacity: 0; transition: opacity 160ms ease; }
+  .mode.is-active .mode__check svg { opacity: 1; }
+
+  /* ---------- COURT COUNTER ---------- */
+  .counter-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+    padding: 22px 6px 28px;
+  }
+  .counter-row__label { display: flex; flex-direction: column; gap: 4px; }
+  .counter-row__label .t-label { font-size: 13px; }
+  .counter-row__hint { color: var(--ink-soft); font-size: 12px; }
+  .counter {
+    display: flex; align-items: center; gap: 16px;
+    background: white;
+    border: 1.5px solid rgba(0,0,0,0.12);
+    border-radius: 14px;
+    padding: 6px;
+  }
+  .counter button {
+    appearance: none;
+    width: 44px; height: 44px; border-radius: 10px;
+    border: none; cursor: pointer;
+    background: transparent;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 22px;
+    color: var(--ink);
+    transition: background 120ms ease, transform 120ms ease, color 120ms ease;
+  }
+  .counter button:hover:not(:disabled) { background: rgba(0,0,0,0.06); }
+  .counter button:active:not(:disabled) { transform: scale(0.94); }
+  .counter button:disabled { color: rgba(0,0,0,0.2); cursor: not-allowed; }
+  .counter__value {
+    width: 72px; height: 56px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: white;
+    display: grid; place-items: center;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 28px;
+    line-height: 1;
+    transition: transform 200ms cubic-bezier(.2,.7,.2,1.4);
+  }
+  .counter__value.bump { transform: scale(1.08); }
+
+  /* ---------- CTA ---------- */
+  .cta {
+    appearance: none;
+    width: 100%;
+    height: 72px;
+    border: none;
+    border-radius: 14px;
+    background: var(--paddle-green);
+    color: white;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+    transition: background 160ms ease, transform 100ms ease, box-shadow 160ms ease;
+    box-shadow: 0 6px 0 var(--paddle-green-dark), 0 12px 24px rgba(45,119,73,0.25);
+  }
+  .cta:hover { background: var(--paddle-green-dark); }
+  .cta:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--paddle-green-dark), 0 8px 16px rgba(45,119,73,0.20); }
+  .cta svg { transition: transform 200ms ease; }
+  .cta:hover svg { transform: translateX(4px); }
+
+  /* ---------- META TILES ---------- */
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 720px;
+    margin: 28px auto 0;
+  }
+  .meta__tile {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .meta__tile .num { font-family: "Dela Gothic One", system-ui; font-size: 28px; line-height: 1; }
+  .meta__tile .lbl { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+
+  /* ---------- TOAST / CONFIRM ---------- */
+  .confirm {
+    position: fixed; inset: 0;
+    background: rgba(15, 20, 17, 0.55);
+    display: grid; place-items: center;
+    z-index: 50;
+    backdrop-filter: blur(6px);
+    animation: fadeIn 200ms ease;
+  }
+  .confirm__card {
+    background: white;
+    width: min(440px, calc(100% - 48px));
+    border-radius: 22px;
+    padding: 36px 32px 28px;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    animation: pop 320ms cubic-bezier(.2,.7,.2,1.4);
+  }
+  .confirm__check {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--paddle-green);
+    display: grid; place-items: center;
+    margin: 0 auto 18px;
+    box-shadow: 0 0 0 8px rgba(45,119,73,0.15);
+  }
+  .confirm__title { font-family: "Dela Gothic One", system-ui; font-size: 24px; margin: 0 0 8px; }
+  .confirm__body { color: var(--ink-soft); font-size: 14px; line-height: 1.5; margin: 0 0 20px; }
+  .confirm__pill {
+    display: inline-flex; gap: 8px; align-items: center;
+    padding: 8px 14px; border-radius: 999px;
+    background: var(--paddle-green-soft);
+    color: var(--paddle-green-dark);
+    font-weight: 700; font-size: 13px; letter-spacing: 0.04em;
+    margin-bottom: 24px;
+  }
+  .confirm__row { display: flex; gap: 10px; }
+  .confirm__row button {
+    flex: 1; height: 48px;
+    border-radius: 12px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: background 160ms ease;
+  }
+  .confirm__row .btn-secondary { background: rgba(0,0,0,0.05); color: var(--ink); }
+  .confirm__row .btn-secondary:hover { background: rgba(0,0,0,0.09); }
+  .confirm__row .btn-primary { background: var(--paddle-green); color: white; }
+  .confirm__row .btn-primary:hover { background: var(--paddle-green-dark); }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ---------- FOOTER NOTE ---------- */
+  .footer-note {
+    text-align: center;
+    margin-top: 40px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .footer-note .t-script { font-size: 18px; color: var(--ink); margin-right: 6px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "accent": "#2D7749",
+      "wordmark": "PADDLEQ",
+      "heroLine1": "Set up your court",
+      "heroLine2": "and start playing.",
+      "showMeta": true,
+      "maxCourts": 12
+    }/*EDITMODE-END*/;
+
+    function CheckIcon({ size = 12, color = "white" }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 12 12" fill="none">
+          <path d="M2 6.5L4.8 9L10 3.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+
+    function ArrowRight() {
+      return (
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M3 11h15M12 5l6 6-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+
+    function App({ t, setTweak }) {
+      const [mode, setMode] = useState("singles");          // "singles" | "doubles"
+      const [courts, setCourts] = useState(1);
+      const [confirmed, setConfirmed] = useState(false);
+      const [bump, setBump] = useState(false);
+      const valueRef = useRef(null);
+
+      // Apply accent live
+      useEffect(() => {
+        document.documentElement.style.setProperty("--paddle-green", t.accent);
+        // derive a darker shade
+        const dark = (() => {
+          const m = t.accent.match(/^#?([0-9a-f]{6})$/i);
+          if (!m) return t.accent;
+          const r = parseInt(m[1].slice(0,2), 16);
+          const g = parseInt(m[1].slice(2,4), 16);
+          const b = parseInt(m[1].slice(4,6), 16);
+          const f = 0.78;
+          const toHex = n => Math.round(n*f).toString(16).padStart(2,'0');
+          return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        })();
+        document.documentElement.style.setProperty("--paddle-green-dark", dark);
+        document.documentElement.style.setProperty("--paddle-green-soft", t.accent + "1F");
+      }, [t.accent]);
+
+      const max = Math.max(1, Math.min(99, t.maxCourts || 12));
+
+      const setCourtsClamped = (n) => {
+        const next = Math.min(max, Math.max(1, n));
+        setCourts(next);
+        setBump(true);
+        setTimeout(() => setBump(false), 200);
+      };
+
+      // keyboard ergonomics
+      useEffect(() => {
+        const onKey = (e) => {
+          if (confirmed) {
+            if (e.key === "Escape") setConfirmed(false);
+            return;
+          }
+          if (e.key === "ArrowUp" || e.key === "+" || e.key === "=") setCourtsClamped(courts + 1);
+          if (e.key === "ArrowDown" || e.key === "-") setCourtsClamped(courts - 1);
+          if (e.key === "Enter") setConfirmed(true);
+          if (e.key === "1") setMode("singles");
+          if (e.key === "2") setMode("doubles");
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+      }, [courts, confirmed]);
+
+      const playersPerCourt = mode === "singles" ? 2 : 4;
+      const totalPlayers = playersPerCourt * courts;
+
+      return (
+        <>
+          <header className="header" data-screen-label="Home — header">
+            <img className="header__logo" src="assets/logo.png" alt="PaddleQ logo" />
+            <div className="t-wordmark header__brand">{t.wordmark}</div>
+            <nav className="header__nav">
+              <a href="#" className="active">Home</a>
+              <a href="#">Queue</a>
+              <a href="#">Players</a>
+              <a href="#">Courts</a>
+            </nav>
+          </header>
+
+          <main className="stage" data-screen-label="01 Home">
+            <section className="hero">
+              <span className="hero__eyebrow">Pickleball queue · ready when you are</span>
+              <h1 className="hero__title">
+                {t.heroLine1.split(" ").slice(0,-1).join(" ")} <em>{t.heroLine1.split(" ").slice(-1)}</em>
+                <br />
+                {t.heroLine2}
+              </h1>
+              <p className="hero__sub">
+                Pick singles or doubles, set how many courts you've got, and PaddleQ takes care of the rotation —
+                no whiteboards, no shouting names across the net.
+              </p>
+            </section>
+
+            <section className="card" aria-label="Court setup">
+              <div className="card__step"><b>1</b><span>Choose your format</span></div>
+              <h2 className="card__title">Singles or doubles?</h2>
+
+              <div className="modes" role="radiogroup" aria-label="Game mode">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === "singles"}
+                  className={"mode" + (mode === "singles" ? " is-active" : "")}
+                  onClick={() => setMode("singles")}
+                >
+                  <span className="mode__icon"><img src="assets/singles.png" alt="" /></span>
+                  <span>
+                    <div className="mode__title">Singles</div>
+                    <div className="mode__sub">2 players per court</div>
+                  </span>
+                  <span className="mode__check"><CheckIcon /></span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === "doubles"}
+                  className={"mode" + (mode === "doubles" ? " is-active" : "")}
+                  onClick={() => setMode("doubles")}
+                >
+                  <span className="mode__icon"><img src="assets/doubles.png" alt="" /></span>
+                  <span>
+                    <div className="mode__title">Doubles</div>
+                    <div className="mode__sub">4 players per court</div>
+                  </span>
+                  <span className="mode__check"><CheckIcon /></span>
+                </button>
+              </div>
+
+              <div className="card__step"><b>2</b><span>Set up the courts</span></div>
+
+              <div className="counter-row">
+                <div className="counter-row__label">
+                  <span className="t-label">Number of courts</span>
+                  <span className="counter-row__hint">Tap +/− or use ↑ ↓ on your keyboard</span>
+                </div>
+                <div className="counter" role="group" aria-label="Court count">
+                  <button
+                    type="button"
+                    aria-label="Decrease"
+                    disabled={courts <= 1}
+                    onClick={() => setCourtsClamped(courts - 1)}
+                  >−</button>
+                  <div
+                    ref={valueRef}
+                    className={"counter__value" + (bump ? " bump" : "")}
+                    aria-live="polite"
+                  >{courts}</div>
+                  <button
+                    type="button"
+                    aria-label="Increase"
+                    disabled={courts >= max}
+                    onClick={() => setCourtsClamped(courts + 1)}
+                  >+</button>
+                </div>
+              </div>
+
+              <button type="button" className="cta" onClick={() => setConfirmed(true)}>
+                Setup court<ArrowRight />
+              </button>
+            </section>
+
+            {t.showMeta && (
+              <div className="meta">
+                <div className="meta__tile">
+                  <span className="num">{courts}</span>
+                  <span className="lbl">{courts === 1 ? "Court" : "Courts"}</span>
+                </div>
+                <div className="meta__tile">
+                  <span className="num">{playersPerCourt}</span>
+                  <span className="lbl">Per court</span>
+                </div>
+                <div className="meta__tile">
+                  <span className="num">{totalPlayers}</span>
+                  <span className="lbl">Players needed</span>
+                </div>
+              </div>
+            )}
+
+            <p className="footer-note">
+              <span className="t-script">tip</span>
+              press <b>Enter</b> to setup, <b>1 / 2</b> to switch modes
+            </p>
+          </main>
+
+          {confirmed && (
+            <div className="confirm" role="dialog" aria-modal="true">
+              <div className="confirm__card">
+                <div className="confirm__check">
+                  <CheckIcon size={28} />
+                </div>
+                <h3 className="confirm__title">Court is ready</h3>
+                <p className="confirm__body">
+                  We've set up {courts} {courts === 1 ? "court" : "courts"} for {mode}.
+                  Add players next to start the queue.
+                </p>
+                <div className="confirm__pill">
+                  <CheckIcon size={10} color="rgb(34,95,58)" />
+                  {totalPlayers} player slots open
+                </div>
+                <div className="confirm__row">
+                  <button className="btn-secondary" onClick={() => setConfirmed(false)}>Adjust</button>
+                  <button className="btn-primary" onClick={() => setConfirmed(false)}>Add players</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    function Root() {
+      const [t, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+      return (
+        <>
+          <App t={t} setTweak={setTweak} />
+          <window.TweaksPanel title="Tweaks">
+            <window.TweakSection label="Brand">
+              <window.TweakColor label="Accent" value={t.accent}
+                options={["#2D7749","#0E5FBA","#C24A1E","#1F1F1F","#7A3FB7"]}
+                onChange={(v) => setTweak('accent', v)} />
+              <window.TweakText label="Wordmark" value={t.wordmark}
+                onChange={(v) => setTweak('wordmark', v)} />
+            </window.TweakSection>
+            <window.TweakSection label="Hero">
+              <window.TweakText label="Line 1" value={t.heroLine1}
+                onChange={(v) => setTweak('heroLine1', v)} />
+              <window.TweakText label="Line 2" value={t.heroLine2}
+                onChange={(v) => setTweak('heroLine2', v)} />
+            </window.TweakSection>
+            <window.TweakSection label="Layout">
+              <window.TweakToggle label="Show summary tiles" value={t.showMeta}
+                onChange={(v) => setTweak('showMeta', v)} />
+              <window.TweakSlider label="Max courts" value={t.maxCourts}
+                min={4} max={24} step={1}
+                onChange={(v) => setTweak('maxCourts', v)} />
+            </window.TweakSection>
+          </window.TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+  </script>
+</body>
+</html>

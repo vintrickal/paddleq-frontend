@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PaddleQ — Loading</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Faster+One&family=Dela+Gothic+One&family=Chivo:wght@400;700;900&family=Covered+By+Your+Grace&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paddle-green: rgb(45,119,73);
+    --paddle-green-dark: rgb(34,95,58);
+    --court-blue: #1d72b8;
+    --court-tan: #c47b4a;
+    --ink: #141414;
+    --ink-soft: #5a5a5a;
+    --paper: #f3f3ef;
+    --ball: #d4ed3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: "Chivo", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: grid; place-items: center;
+    position: relative;
+  }
+
+  /* subtle court line backdrop */
+  .court-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(45,119,73,0.06) 0%, transparent 60%),
+      var(--paper);
+    overflow: hidden;
+  }
+  .court-bg::before, .court-bg::after {
+    content: ""; position: absolute;
+    border: 2px solid rgba(45,119,73,0.12);
+    border-radius: 8px;
+  }
+  .court-bg::before { inset: 12% 18%; }
+  .court-bg::after  { inset: 22% 32%; border-color: rgba(45,119,73,0.18); }
+  .net-line {
+    position: absolute; left: 8%; right: 8%; top: 50%;
+    height: 0; border-top: 2px dashed rgba(45,119,73,0.25);
+  }
+
+  .stage {
+    position: relative;
+    width: min(640px, 86vw);
+    display: flex; flex-direction: column; align-items: center; gap: 36px;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand .word {
+    font-family: "Faster One", cursive;
+    font-size: clamp(36px, 8vw, 64px);
+    color: var(--ink);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .brand .word .q-dot {
+    display: inline-block; width: 0.5em; height: 0.5em;
+    border-radius: 50%; background: var(--ball);
+    margin-left: 0.06em; vertical-align: 0.05em;
+    box-shadow: inset -3px -3px 0 rgba(0,0,0,0.08);
+    animation: dotJiggle 1.4s ease-in-out infinite;
+  }
+  @keyframes dotJiggle {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-6px); }
+  }
+
+  /* ===== rally scene ===== */
+  .rally {
+    position: relative;
+    width: 100%; height: 200px;
+  }
+  /* paddle */
+  .paddle {
+    position: absolute;
+    top: 50%;
+    width: 78px; height: 96px;
+    transform-origin: 50% 90%;
+  }
+  .paddle__face {
+    position: absolute; left: 0; top: 0;
+    width: 78px; height: 78px;
+    border-radius: 38px 38px 36px 36px;
+    background: var(--paddle-green);
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,0.18),
+                inset 0 0 0 4px rgba(255,255,255,0.08),
+                0 6px 12px -4px rgba(0,0,0,0.25);
+  }
+  .paddle__face::before {
+    content: ""; position: absolute; inset: 8px;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,255,255,0.18), transparent 60%),
+      repeating-linear-gradient(45deg, transparent 0 6px, rgba(0,0,0,0.05) 6px 7px);
+  }
+  .paddle__handle {
+    position: absolute; left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    width: 14px; height: 28px;
+    background: #2c1d12;
+    border-radius: 4px 4px 5px 5px;
+    box-shadow: inset 2px 0 0 rgba(255,255,255,0.06),
+                inset -2px 0 0 rgba(0,0,0,0.3);
+  }
+  .paddle__grip {
+    position: absolute; left: 50%; bottom: 4px;
+    transform: translateX(-50%);
+    width: 14px; height: 18px;
+    background: repeating-linear-gradient(-30deg, #c47b4a 0 3px, #8a4f29 3px 5px);
+    border-radius: 3px;
+  }
+
+  .paddle--left {
+    left: 8%;
+    transform: translateY(-50%) rotate(-18deg);
+    animation: swingLeft 1.2s cubic-bezier(.45,.05,.55,.95) infinite;
+  }
+  .paddle--right {
+    right: 8%;
+    transform: translateY(-50%) rotate(18deg) scaleX(-1);
+    animation: swingRight 1.2s cubic-bezier(.45,.05,.55,.95) infinite;
+  }
+  @keyframes swingLeft {
+    0%,15%   { transform: translateY(-50%) rotate(-32deg); }
+    25%      { transform: translateY(-50%) rotate(8deg); }
+    50%,100% { transform: translateY(-50%) rotate(-18deg); }
+  }
+  @keyframes swingRight {
+    0%,50%   { transform: translateY(-50%) rotate(18deg) scaleX(-1); }
+    65%      { transform: translateY(-50%) rotate(32deg) scaleX(-1); }
+    75%      { transform: translateY(-50%) rotate(-8deg) scaleX(-1); }
+    100%     { transform: translateY(-50%) rotate(18deg) scaleX(-1); }
+  }
+
+  /* the ball — flies left ↔ right with arc */
+  .ball-wrap {
+    position: absolute;
+    top: 50%; left: 0;
+    width: 100%; height: 0;
+    animation: ballX 1.2s cubic-bezier(.45,.05,.55,.95) infinite;
+  }
+  .ball {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f7ff7a, var(--ball) 50%, #b6cf28 100%);
+    box-shadow: 0 6px 14px -4px rgba(0,0,0,0.3),
+                inset -3px -4px 0 rgba(0,0,0,0.12);
+    transform: translate(-50%, -50%);
+    animation: ballY 0.6s cubic-bezier(.5,0,.5,1) infinite alternate;
+  }
+  /* pickleball holes */
+  .ball::before, .ball::after {
+    content: ""; position: absolute;
+    background: rgba(0,0,0,0.18); border-radius: 50%;
+  }
+  .ball::before {
+    width: 4px; height: 4px;
+    top: 6px; left: 8px;
+    box-shadow:
+      8px -1px 0 rgba(0,0,0,0.18),
+      14px 4px 0 rgba(0,0,0,0.18),
+      4px 12px 0 rgba(0,0,0,0.14),
+      12px 14px 0 rgba(0,0,0,0.14);
+  }
+  .ball::after {
+    width: 3px; height: 3px;
+    top: 16px; left: 4px;
+    opacity: 0.5;
+  }
+  @keyframes ballX {
+    0%   { left: 14%; }
+    50%  { left: 86%; }
+    100% { left: 14%; }
+  }
+  @keyframes ballY {
+    0%   { top: 30%; }
+    100% { top: 60%; }
+  }
+
+  /* ball shadow on the ground */
+  .ball-shadow {
+    position: absolute;
+    bottom: 12px; left: 0;
+    width: 30px; height: 8px;
+    background: rgba(0,0,0,0.25);
+    filter: blur(4px);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    animation: shadowX 1.2s cubic-bezier(.45,.05,.55,.95) infinite,
+               shadowScale 0.6s cubic-bezier(.5,0,.5,1) infinite alternate;
+  }
+  @keyframes shadowX {
+    0%   { left: 14%; }
+    50%  { left: 86%; }
+    100% { left: 14%; }
+  }
+  @keyframes shadowScale {
+    0%   { transform: translateX(-50%) scale(0.7); opacity: 0.18; }
+    100% { transform: translateX(-50%) scale(1.1);  opacity: 0.32; }
+  }
+
+  /* trailing motion lines */
+  .trail {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 60px; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(45,119,73,0.4), transparent);
+    transform: translate(-50%,-50%);
+    opacity: 0.6;
+    animation: trailFlip 1.2s steps(2) infinite;
+  }
+  @keyframes trailFlip {
+    0%, 49% { transform: translate(-50%,-50%) scaleX(1); }
+    50%,100%{ transform: translate(-50%,-50%) scaleX(-1); }
+  }
+
+  /* ===== progress bar ===== */
+  .bar-wrap {
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .bar {
+    width: 100%; height: 10px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar__fill {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 0;
+    background:
+      repeating-linear-gradient(45deg,
+        var(--paddle-green) 0 10px,
+        var(--paddle-green-dark) 10px 20px);
+    border-radius: 99px;
+    animation: fill 3.6s cubic-bezier(.6,.04,.4,1) infinite;
+  }
+  .bar__fill::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.4s linear infinite;
+  }
+  @keyframes fill {
+    0%   { width: 0%; }
+    60%  { width: 80%; }
+    85%  { width: 96%; }
+    100% { width: 100%; }
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .label {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 12px; letter-spacing: 2px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .label .dots::after {
+    content: "";
+    display: inline-block; width: 1.6em;
+    text-align: left;
+    animation: dots 1.4s steps(4) infinite;
+  }
+  @keyframes dots {
+    0%   { content: ""; }
+    25%  { content: "."; }
+    50%  { content: ".."; }
+    75%  { content: "..."; }
+    100% { content: ""; }
+  }
+  .sub {
+    font-family: "Covered By Your Grace", cursive;
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 4s !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="court-bg" aria-hidden="true">
+    <div class="net-line"></div>
+  </div>
+
+  <div class="stage" role="status" aria-live="polite" aria-label="Loading">
+    <div class="brand">
+      <span class="word">PADDLE<span class="q-dot"></span></span>
+    </div>
+
+    <div class="rally" aria-hidden="true">
+      <div class="paddle paddle--left">
+        <div class="paddle__face"></div>
+        <div class="paddle__handle"></div>
+        <div class="paddle__grip"></div>
+      </div>
+      <div class="paddle paddle--right">
+        <div class="paddle__face" style="background: rgb(194,74,30);"></div>
+        <div class="paddle__handle"></div>
+        <div class="paddle__grip"></div>
+      </div>
+      <div class="ball-wrap">
+        <div class="ball"></div>
+      </div>
+      <div class="ball-shadow"></div>
+      <div class="trail"></div>
+    </div>
+
+    <div class="bar-wrap">
+      <div class="bar"><div class="bar__fill"></div></div>
+      <div class="label">QUEUEING UP<span class="dots"></span></div>
+      <div class="sub">warming up the courts</div>
+    </div>
+  </div>
+</body>
+</html>

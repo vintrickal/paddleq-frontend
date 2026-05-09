@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PaddleQ — Court (Mobile)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Faster+One&family=Dela+Gothic+One&family=Chivo:wght@400;600;700;900&family=Indie+Flower&family=Covered+By+Your+Grace&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paddle-green: rgb(45,119,73);
+    --paddle-green-dark: rgb(34, 95, 58);
+    --paddle-green-soft: rgba(45,119,73,0.10);
+    --ink: #141414;
+    --ink-soft: #5a5a5a;
+    --ink-faint: #8a8a8a;
+    --line: rgba(0,0,0,0.08);
+    --paper: #f3f3ef;
+    --tile: #ffffff;
+    --warn: #C7891B;
+    --rest: #8a8a8a;
+    --active: rgb(14,146,14);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Chivo", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+  }
+
+  .stage {
+    display: flex; gap: 36px; align-items: flex-start; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stage__caption {
+    text-align: center; margin-top: 16px;
+    font-family: "Covered By Your Grace", cursive;
+    font-size: 18px; color: var(--ink-soft);
+  }
+
+  /* ---------- screen frame ---------- */
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .topbar {
+    padding: 58px 18px 10px;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 4;
+  }
+  .topbar__back {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--line);
+    background: white;
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+  .topbar__brand {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar__brand img { width: 28px; height: 24px; object-fit: contain; }
+  .topbar__brand .wordmark {
+    font-family: "Faster One", system-ui;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+  }
+  .topbar__actions {
+    margin-left: auto;
+    display: flex; gap: 8px;
+  }
+  .topbar__icon {
+    width: 36px; height: 36px; border-radius: 12px;
+    border: 1px solid var(--line);
+    background: white;
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+
+  .meta-row {
+    padding: 4px 18px 14px;
+    display: flex; align-items: center; gap: 14px;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+  }
+  .meta-row .courts { color: rgb(120,67,67); }
+  .meta-row .mode { color: rgb(23,121,3); }
+  .meta-row .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(0,0,0,0.2); }
+
+  /* tabs */
+  .tabs {
+    margin: 0 18px 14px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: rgba(0,0,0,0.05);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    position: relative;
+  }
+  .tabs button {
+    appearance: none; border: none;
+    background: transparent;
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  }
+  .tabs button.active {
+    background: white;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 0 rgba(0,0,0,0.04);
+  }
+  .tabs .badge {
+    background: var(--paddle-green);
+    color: white;
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 40px;
+  }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  /* court pager */
+  .pager {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 2px 12px;
+    justify-content: space-between;
+  }
+  .pager__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+  }
+  .pager__nav { display: flex; gap: 6px; align-items: center; }
+  .pager__nav button {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: white;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: background 120ms ease;
+  }
+  .pager__nav button:hover:not(:disabled) { background: var(--paddle-green-soft); }
+  .pager__nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pager__nav .count {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 0 6px;
+  }
+
+  /* court card — ACTIVE state */
+  .court {
+    background: white;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .court__head {
+    display: flex; align-items: center; padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .court__name {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+  }
+  .court__edit {
+    margin-left: auto; width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.05);
+    border: none; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .court__close {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.05);
+    border: none; cursor: pointer;
+    margin-left: 6px;
+    display: grid; place-items: center;
+  }
+  .court__status {
+    margin-left: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .court__status.live {
+    background: var(--paddle-green-soft);
+    color: var(--paddle-green-dark);
+  }
+  .court__status.live::before {
+    content: ""; display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--paddle-green);
+    margin-right: 6px; vertical-align: middle;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .court__status.empty {
+    background: rgba(0,0,0,0.04);
+    color: var(--ink-soft);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  /* doubles match */
+  .match {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: stretch;
+    padding: 16px 12px 0;
+  }
+  .team {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 8px;
+  }
+  .team__title {
+    font-family: "Chivo", system-ui;
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+  .team__player {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .team__avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--paddle-green-soft);
+    color: var(--paddle-green-dark);
+    display: grid; place-items: center;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .team__name {
+    font-size: 14px; font-weight: 600;
+    line-height: 1.2;
+  }
+  .team__skill {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-family: "Chivo", system-ui;
+  }
+  .match__divider {
+    display: grid; place-items: center;
+    color: var(--ink-faint);
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 12px;
+    border-left: 1px solid var(--line);
+  }
+
+  .court__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+    border-top: 1px solid var(--line);
+    margin-top: 10px;
+  }
+  .winner-btn {
+    appearance: none; border: none;
+    height: 48px;
+    border-radius: 12px;
+    background: rgb(100,116,145);
+    color: white;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 160ms ease, transform 100ms ease;
+  }
+  .winner-btn:hover { background: rgb(80,96,125); }
+  .winner-btn:active { transform: translateY(1px); }
+  .winner-btn small {
+    display: block;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+  }
+
+  /* empty court */
+  .court--empty .court__body {
+    padding: 28px 18px 20px;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .court--empty .court__body .icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.04);
+    margin: 0 auto 10px;
+    display: grid; place-items: center;
+  }
+  .court--empty .court__body p {
+    font-size: 13px; margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .queue-cta {
+    appearance: none; border: none;
+    width: 100%; height: 52px;
+    border-radius: 12px;
+    background: var(--paddle-green);
+    color: white;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--paddle-green-dark);
+    transition: background 160ms ease, transform 80ms ease, box-shadow 160ms ease;
+  }
+  .queue-cta:hover { background: var(--paddle-green-dark); }
+  .queue-cta:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--paddle-green-dark); }
+
+  /* timer chip */
+  .timer {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-left: auto;
+  }
+
+  /* ---------- PLAYERS LIST ---------- */
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    margin: 18px 4px 10px;
+  }
+  .section-title h3 {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+    margin: 0;
+  }
+  .section-title .count {
+    background: rgba(0,0,0,0.06);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .section-title .add {
+    margin-left: auto;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--ink);
+  }
+  .section-title .add:hover { background: rgba(0,0,0,0.04); }
+
+  /* status filter */
+  .filters {
+    display: flex; gap: 6px;
+    margin: 0 0 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filters::-webkit-scrollbar { height: 0; }
+  .filters button {
+    appearance: none;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: white;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 160ms, color 160ms, border-color 160ms;
+  }
+  .filters button.active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+
+  .player-list {
+    display: flex; flex-direction: column;
+    gap: 8px;
+  }
+  .player {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 12px;
+    transition: transform 160ms ease, border-color 160ms ease;
+  }
+  .player:hover { border-color: rgba(0,0,0,0.18); }
+  .player.is-resting { opacity: 0.55; }
+  .player__avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .player__main { flex: 1; min-width: 0; }
+  .player__name {
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.2;
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .player__name .skill {
+    font-family: "Covered By Your Grace", cursive;
+    font-size: 14px;
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+  .player__status {
+    font-family: "Chivo", system-ui;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .player__status::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+  }
+  .player__status.active { color: var(--active); }
+  .player__status.active::before { background: var(--active); }
+  .player__status.waiting { color: var(--warn); }
+  .player__status.waiting::before { background: var(--warn); }
+  .player__status.resting { color: var(--rest); }
+  .player__status.resting::before { background: var(--rest); }
+  .player__chev {
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
+  .player__court {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 10px;
+    color: var(--ink-soft);
+    background: rgba(0,0,0,0.05);
+    padding: 3px 7px;
+    border-radius: 6px;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+
+  /* fab */
+  .fab {
+    position: absolute;
+    bottom: 22px;
+    right: 16px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--paddle-green);
+    border: none;
+    color: white;
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(45,119,73,0.4), 0 1px 0 var(--paddle-green-dark);
+    transition: transform 160ms ease;
+    z-index: 30;
+  }
+  .fab:hover { transform: scale(1.05); }
+
+  /* ─── ADD PLAYER SHEET ─── */
+  .sheet-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15, 20, 17, 0.5);
+    z-index: 90;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 200ms ease;
+  }
+  .sheet {
+    background: white;
+    border-radius: 22px 22px 0 0;
+    padding: 10px 18px 28px;
+    animation: slideUp 280ms cubic-bezier(.2,.7,.2,1.1);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.18);
+  }
+  .sheet__handle {
+    width: 36px; height: 4px;
+    background: rgba(0,0,0,0.18);
+    border-radius: 999px;
+    margin: 0 auto 14px;
+  }
+  .sheet__head {
+    display: flex; align-items: center;
+    margin-bottom: 16px;
+  }
+  .sheet__title {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 18px;
+    margin: 0;
+  }
+  .sheet__close {
+    margin-left: auto;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.05);
+    border: none; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .field { margin-bottom: 12px; }
+  .field__label {
+    font-family: "Chivo", system-ui;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .field__input {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: white;
+    font-family: "Chivo", system-ui;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+    outline: none;
+  }
+  .field__input:focus {
+    border-color: var(--paddle-green);
+    box-shadow: 0 0 0 3px var(--paddle-green-soft);
+  }
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .skill-grid button {
+    appearance: none; border: 1.5px solid var(--line);
+    background: white;
+    height: 44px;
+    border-radius: 10px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 140ms ease;
+  }
+  .skill-grid button.active {
+    background: var(--paddle-green);
+    color: white;
+    border-color: var(--paddle-green);
+  }
+  .sheet__row { display: flex; gap: 8px; margin-top: 6px; }
+  .sheet__row button {
+    flex: 1; height: 50px;
+    border: none;
+    border-radius: 12px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 160ms ease;
+  }
+  .sheet__row .btn-cancel { background: rgba(0,0,0,0.05); color: var(--ink); flex: 0 0 32%; }
+  .sheet__row .btn-add { background: var(--paddle-green); color: white; }
+  .sheet__row .btn-add:disabled { background: rgba(0,0,0,0.12); color: rgba(0,0,0,0.4); cursor: not-allowed; }
+  .sheet__row .btn-add:hover:not(:disabled) { background: var(--paddle-green-dark); }
+
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* fade-and-center winner transition */
+  .court.is-fading .court__head,
+  .court.is-fading .match__divider,
+  .court.is-fading .team--lose {
+    opacity: 0;
+    transition: opacity 700ms ease;
+  }
+  .court.is-fading .team--win {
+    grid-column: 1 / -1;
+    transform: translateX(0);
+    animation: winnerCenter 1800ms ease-in-out forwards;
+  }
+  .court.is-fading .court__actions {
+    opacity: 0;
+    transition: opacity 400ms ease;
+    pointer-events: none;
+  }
+  @keyframes winnerCenter {
+    0%   { transform: translateX(0); opacity: 1; }
+    25%  { transform: translateX(0); opacity: 1; }
+    55%  { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(0); opacity: 0; }
+  }
+  .court.is-fading .team--win .team__title {
+    color: var(--paddle-green-dark);
+    font-size: 14px;
+    transition: color 400ms ease, font-size 400ms ease;
+  }
+  .court.is-fading .team--win .team__title::before {
+    content: "🏆 ";
+  }
+
+  /* dot indicators */
+  .dots {
+    display: flex; justify-content: center; gap: 6px;
+    margin-top: 4px;
+  }
+  .dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    transition: background 200ms ease, width 200ms ease;
+  }
+  .dots span.active { background: var(--paddle-green); width: 18px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "accent": "#2D7749",
+      "courtCount": 4,
+      "showFab": true
+    }/*EDITMODE-END*/;
+
+    const AVATAR_COLORS = [
+      "#2D7749","#0E5FBA","#C24A1E","#7A3FB7","#1F1F1F","#C7891B","#2A8C8E","#A02A6E"
+    ];
+    function avatarColor(name) {
+      let h = 0;
+      for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+    }
+    function initials(name) {
+      return name.split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase();
+    }
+
+    // ─── icons ──────────────────────────────────────────────
+    const Icon = {
+      Back: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Plus: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+      QR: () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="4" height="4" stroke="currentColor" strokeWidth="1.4"/><rect x="10" y="2" width="4" height="4" stroke="currentColor" strokeWidth="1.4"/><rect x="2" y="10" width="4" height="4" stroke="currentColor" strokeWidth="1.4"/><rect x="10" y="10" width="2" height="2" fill="currentColor"/><rect x="13" y="13" width="1.5" height="1.5" fill="currentColor"/></svg>,
+      User: () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M3 14c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+      Edit: () => <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 12l2-.5L11 4.5 9.5 3 2.5 10 2 12z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+      X: () => <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+      Chev: ({d="right"}) => <svg width="10" height="14" viewBox="0 0 10 14" fill="none" style={{transform: d==='left'?'rotate(180deg)':d==='down'?'rotate(90deg)':d==='up'?'rotate(-90deg)':''}}><path d="M2 1l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Trophy: () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2h8v3a4 4 0 01-8 0V2zM5 9h4v3H5V9z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M3 3H1.5v1.5A1.5 1.5 0 003 6M11 3h1.5v1.5A1.5 1.5 0 0111 6" stroke="currentColor" strokeWidth="1.4"/></svg>,
+      Clock: () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M6 3v3.2L7.8 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+    };
+
+    // ─── data ──────────────────────────────────────────────
+    const SEED_PLAYERS = [
+      { name: "Vince",      skill: "3.0", status: "active", court: 1 },
+      { name: "Aliza",      skill: "3.0", status: "active", court: 1 },
+      { name: "Wilter J.",  skill: "3.0", status: "active", court: 1 },
+      { name: "Marcelo L.", skill: "2.5", status: "active", court: 1 },
+      { name: "Cheska",     skill: "2.0", status: "waiting" },
+      { name: "Rio",        skill: "2.5", status: "waiting" },
+      { name: "Joaqui",     skill: "3.5", status: "waiting" },
+      { name: "Mae",        skill: "2.5", status: "waiting" },
+      { name: "Haru Yuki",  skill: "2.5", status: "resting" },
+      { name: "Dani",       skill: "3.0", status: "resting" },
+    ];
+
+    function StatusPill({ s }) {
+      const label = s === "active" ? "Active match" : s === "waiting" ? "Waiting" : "Resting";
+      return <span className={"player__status " + s}>{label}</span>;
+    }
+
+    function CourtCard({ idx, players, fadingTeam, onWinner, onQueue }) {
+      const team1 = players.slice(0,2);
+      const team2 = players.slice(2,4);
+      const filled = players.length === 4;
+
+      if (!filled) {
+        return (
+          <div className="court court--empty">
+            <div className="court__head">
+              <span className="court__name">Court {idx}</span>
+              <span className="court__status empty">Empty</span>
+              <button className="court__edit" aria-label="Edit"><Icon.Edit /></button>
+            </div>
+            <div className="court__body">
+              <div className="icon"><Icon.User /></div>
+              <p>No active match.<br/>Add 4 players to start the next round.</p>
+              <button className="queue-cta" onClick={onQueue}>QUEUE PLAYERS</button>
+            </div>
+          </div>
+        );
+      }
+
+      const fading = !!fadingTeam;
+      return (
+        <div className={"court" + (fading ? " is-fading" : "")}>
+          <div className="court__head">
+            <span className="court__name">Court {idx}</span>
+            <span className="court__status live">Live</span>
+            <span className="timer"><Icon.Clock /> 12:34</span>
+          </div>
+          <div className="match">
+            <div className={"team " + (fading ? (fadingTeam === '1' ? 'team--win' : 'team--lose') : '')}>
+              <div className="team__title">TEAM 1</div>
+              {team1.map(p => (
+                <div className="team__player" key={p.name}>
+                  <div className="team__avatar" style={{background: avatarColor(p.name)+"22", color: avatarColor(p.name)}}>{initials(p.name)}</div>
+                  <div>
+                    <div className="team__name">{p.name}</div>
+                    <div className="team__skill">({p.skill})</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="match__divider">VS</div>
+            <div className={"team " + (fading ? (fadingTeam === '2' ? 'team--win' : 'team--lose') : '')}>
+              <div className="team__title">TEAM 2</div>
+              {team2.map(p => (
+                <div className="team__player" key={p.name}>
+                  <div className="team__avatar" style={{background: avatarColor(p.name)+"22", color: avatarColor(p.name)}}>{initials(p.name)}</div>
+                  <div>
+                    <div className="team__name">{p.name}</div>
+                    <div className="team__skill">({p.skill})</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="court__actions">
+            <button className="winner-btn" onClick={() => onWinner('1')}>
+              <Icon.Trophy />
+              <span><small>Winner</small>TEAM 1</span>
+            </button>
+            <button className="winner-btn" onClick={() => onWinner('2')}>
+              <Icon.Trophy />
+              <span><small>Winner</small>TEAM 2</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function App({ t, setTweak }) {
+      useEffect(() => {
+        document.documentElement.style.setProperty("--paddle-green", t.accent);
+      }, [t.accent]);
+
+      const [tab, setTab] = useState("courts"); // courts | players
+      const [courtIdx, setCourtIdx] = useState(1);
+      const [filter, setFilter] = useState("all");
+      const [players, setPlayers] = useState(SEED_PLAYERS);
+      const [flash, setFlash] = useState(null);
+      const [fadingByCourt, setFadingByCourt] = useState({}); // { [courtIdx]: '1' | '2' }
+      const [showAdd, setShowAdd] = useState(false);
+      const [newName, setNewName] = useState("");
+      const [newSkill, setNewSkill] = useState("3.0");
+
+      const openAddSheet = () => {
+        setNewName("");
+        setNewSkill("3.0");
+        setShowAdd(true);
+      };
+      const submitAdd = () => {
+        const trimmed = newName.trim();
+        if (!trimmed) return;
+        setPlayers(prev => [...prev, { name: trimmed, skill: newSkill, status: "waiting" }]);
+        setShowAdd(false);
+        setFlash(`${trimmed} added to the queue`);
+        setTimeout(() => setFlash(null), 1400);
+      };
+
+      const courtCount = t.courtCount;
+
+      const playersByCourt = useMemo(() => {
+        const m = {};
+        players.forEach(p => {
+          if (p.court) (m[p.court] ||= []).push(p);
+        });
+        return m;
+      }, [players]);
+
+      const handleWinner = (team) => {
+        const ci = courtIdx;
+        if (fadingByCourt[ci]) return;
+        setFlash(`Team ${team} wins court ${ci}!`);
+        setFadingByCourt(prev => ({ ...prev, [ci]: team }));
+        setTimeout(() => setFlash(null), 1400);
+        // After fade animation completes, clear the court (losing team goes back to waiting, winners rest briefly)
+        setTimeout(() => {
+          setPlayers(prev => prev.map(p => {
+            if (p.court !== ci) return p;
+            return { ...p, court: undefined, status: 'waiting' };
+          }));
+          setFadingByCourt(prev => {
+            const next = { ...prev };
+            delete next[ci];
+            return next;
+          });
+        }, 1900);
+      };
+
+      const handleQueue = () => {
+        const ci = courtIdx;
+        // grab next 4 waiting players
+        const waiting = players.filter(p => p.status === 'waiting').slice(0, 4);
+        if (waiting.length < 4) {
+          setFlash(`Need ${4 - waiting.length} more players to start a match`);
+          setTimeout(() => setFlash(null), 1600);
+          return;
+        }
+        const waitingNames = new Set(waiting.map(w => w.name));
+        setPlayers(prev => prev.map(p =>
+          waitingNames.has(p.name) ? { ...p, status: 'active', court: ci } : p
+        ));
+        setFlash(`Court ${ci} is up — match started!`);
+        setTimeout(() => setFlash(null), 1400);
+      };
+
+      const filtered = filter === "all" ? players : players.filter(p => p.status === filter);
+      const counts = {
+        all: players.length,
+        active: players.filter(p => p.status==='active').length,
+        waiting: players.filter(p => p.status==='waiting').length,
+        resting: players.filter(p => p.status==='resting').length,
+      };
+
+      return (
+        <div className="screen" data-screen-label="01 Court (mobile)">
+          {/* topbar */}
+          <div className="topbar">
+            <button className="topbar__back" aria-label="Back"><Icon.Back /></button>
+            <div className="topbar__brand">
+              <img src="assets/logo.png" alt="" />
+              <span className="wordmark">PADDLEQ</span>
+            </div>
+            <div className="topbar__actions">
+              <button className="topbar__icon" aria-label="QR"><Icon.QR /></button>
+              <button className="topbar__icon" aria-label="Add"><Icon.User /></button>
+            </div>
+          </div>
+
+          <div className="meta-row">
+            <span className="courts">{courtCount} COURTS</span>
+            <span className="dot"></span>
+            <span className="mode">DOUBLES</span>
+          </div>
+
+          <div className="tabs" role="tablist">
+            <button className={tab==='courts'?'active':''} onClick={() => setTab('courts')}>
+              Courts <span className="badge" style={{background: tab==='courts' ? 'var(--paddle-green)' : 'rgba(0,0,0,0.12)'}}>{courtCount}</span>
+            </button>
+            <button className={tab==='players'?'active':''} onClick={() => setTab('players')}>
+              Players <span className="badge" style={{background: tab==='players' ? 'var(--paddle-green)' : 'rgba(0,0,0,0.12)'}}>{players.length}</span>
+            </button>
+          </div>
+
+          <div className="scroll">
+            {tab === 'courts' && (
+              <>
+                <div className="pager">
+                  <div className="pager__title">Court {courtIdx}</div>
+                  <div className="pager__nav">
+                    <button onClick={() => setCourtIdx(Math.max(1, courtIdx-1))} disabled={courtIdx===1} aria-label="Previous">
+                      <Icon.Chev d="left" />
+                    </button>
+                    <span className="count">{courtIdx} / {courtCount}</span>
+                    <button onClick={() => setCourtIdx(Math.min(courtCount, courtIdx+1))} disabled={courtIdx===courtCount} aria-label="Next">
+                      <Icon.Chev />
+                    </button>
+                  </div>
+                </div>
+
+                <CourtCard
+                  idx={courtIdx}
+                  players={playersByCourt[courtIdx] || []}
+                  fadingTeam={fadingByCourt[courtIdx]}
+                  onWinner={handleWinner}
+                  onQueue={handleQueue}
+                />
+
+                <div className="dots">
+                  {Array.from({length: courtCount}).map((_, i) => (
+                    <span key={i} className={i+1===courtIdx?'active':''} onClick={() => setCourtIdx(i+1)} style={{cursor:'pointer'}}></span>
+                  ))}
+                </div>
+
+                {flash && (
+                  <div style={{
+                    marginTop: 16,
+                    background: 'var(--paddle-green)',
+                    color: 'white',
+                    padding: '12px 14px',
+                    borderRadius: 12,
+                    fontFamily: "Dela Gothic One",
+                    fontSize: 13,
+                    textAlign: 'center',
+                    animation: 'pulse 1.2s ease-in-out',
+                  }}>{flash}</div>
+                )}
+
+                <div className="section-title">
+                  <h3>Up next</h3>
+                  <span className="count">{counts.waiting}</span>
+                </div>
+                <div className="player-list">
+                  {players.filter(p=>p.status==='waiting').slice(0,3).map(p => (
+                    <div className="player" key={p.name}>
+                      <div className="player__avatar" style={{background: avatarColor(p.name)}}>{initials(p.name)}</div>
+                      <div className="player__main">
+                        <div className="player__name">{p.name} <span className="skill">({p.skill})</span></div>
+                        <StatusPill s={p.status} />
+                      </div>
+                      <span className="player__chev"><Icon.Chev /></span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {tab === 'players' && (
+              <>
+                <div className="section-title" style={{marginTop: 0}}>
+                  <h3>All players</h3>
+                  <span className="count">{counts.all}</span>
+                  <button className="add" onClick={openAddSheet}><Icon.Plus /> Add</button>
+                </div>
+                <div className="filters">
+                  <button className={filter==='all'?'active':''} onClick={() => setFilter('all')}>ALL · {counts.all}</button>
+                  <button className={filter==='active'?'active':''} onClick={() => setFilter('active')}>ACTIVE · {counts.active}</button>
+                  <button className={filter==='waiting'?'active':''} onClick={() => setFilter('waiting')}>WAITING · {counts.waiting}</button>
+                  <button className={filter==='resting'?'active':''} onClick={() => setFilter('resting')}>RESTING · {counts.resting}</button>
+                </div>
+                <div className="player-list">
+                  {filtered.map(p => (
+                    <div className={"player" + (p.status==='resting'?' is-resting':'')} key={p.name}>
+                      <div className="player__avatar" style={{background: avatarColor(p.name)}}>{initials(p.name)}</div>
+                      <div className="player__main">
+                        <div className="player__name">{p.name} <span className="skill">({p.skill})</span></div>
+                        <StatusPill s={p.status} />
+                      </div>
+                      {p.court && <span className="player__court">C{p.court}</span>}
+                      <span className="player__chev"><Icon.Chev /></span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {t.showFab && tab === 'players' && (
+            <button className="fab" aria-label="Add player" onClick={openAddSheet}>
+              <Icon.Plus />
+            </button>
+          )}
+
+          {showAdd && (
+            <div className="sheet-overlay" role="dialog" aria-modal="true" onClick={(e) => { if (e.target === e.currentTarget) setShowAdd(false); }}>
+              <div className="sheet">
+                <div className="sheet__handle"></div>
+                <div className="sheet__head">
+                  <h3 className="sheet__title">Add player</h3>
+                  <button className="sheet__close" aria-label="Close" onClick={() => setShowAdd(false)}><Icon.X /></button>
+                </div>
+
+                <div className="field">
+                  <label className="field__label" htmlFor="player-name">Name</label>
+                  <input
+                    id="player-name"
+                    className="field__input"
+                    placeholder="e.g. HARU YUKI"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') submitAdd(); }}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="field__label">Skill level</label>
+                  <div className="skill-grid">
+                    {["2.0","2.5","3.0","3.5","4.0"].map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={s === newSkill ? "active" : ""}
+                        onClick={() => setNewSkill(s)}
+                      >{s}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sheet__row">
+                  <button className="btn-cancel" onClick={() => setShowAdd(false)}>Cancel</button>
+                  <button className="btn-add" disabled={!newName.trim()} onClick={submitAdd}>
+                    Add to queue
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function PhoneShell({ children }) {
+      return (
+        <window.IOSDevice width={390} height={812}>
+          {children}
+        </window.IOSDevice>
+      );
+    }
+
+    function Root() {
+      const [t, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
+      return (
+        <>
+          <div className="stage">
+            <div>
+              <PhoneShell>
+                <App t={t} setTweak={setTweak} />
+              </PhoneShell>
+              <div className="stage__caption">PaddleQ — Court (mobile)</div>
+            </div>
+          </div>
+
+          <window.TweaksPanel title="Tweaks">
+            <window.TweakSection label="Brand">
+              <window.TweakColor label="Accent" value={t.accent}
+                options={["#2D7749","#0E5FBA","#C24A1E","#1F1F1F","#7A3FB7"]}
+                onChange={(v) => setTweak('accent', v)} />
+            </window.TweakSection>
+            <window.TweakSection label="Layout">
+              <window.TweakSlider label="Number of courts" value={t.courtCount}
+                min={1} max={8} step={1}
+                onChange={(v) => setTweak('courtCount', v)} />
+              <window.TweakToggle label="Show FAB" value={t.showFab}
+                onChange={(v) => setTweak('showFab', v)} />
+            </window.TweakSection>
+          </window.TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+  </script>
+</body>
+</html>

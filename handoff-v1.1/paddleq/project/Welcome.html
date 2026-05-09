@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PaddleQ — Welcome</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Faster+One&family=Dela+Gothic+One&family=Chivo:wght@400;700;900&family=Covered+By+Your+Grace&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paddle-green: rgb(45,119,73);
+    --paddle-green-dark: rgb(34,95,58);
+    --paddle-orange: #C24A1E;
+    --paddle-blue: #1d72b8;
+    --ink: #141414;
+    --ink-soft: #5a5a5a;
+    --paper: #f3f3ef;
+    --ball: #d4ed3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: "Chivo", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+
+  /* court-line background that drifts in */
+  .bg {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(80% 60% at 50% 40%, rgba(45,119,73,0.10), transparent 70%),
+      var(--paper);
+    z-index: 0;
+  }
+  .bg .ring {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    border: 2px solid rgba(45,119,73,0.18);
+    border-radius: 16px;
+    animation: ringIn 1200ms cubic-bezier(.2,.8,.3,1) both;
+  }
+  .bg .ring.r1 { width: 38vmin; height: 38vmin; animation-delay: 200ms; }
+  .bg .ring.r2 { width: 60vmin; height: 60vmin; animation-delay: 380ms; opacity: 0.7; }
+  .bg .ring.r3 { width: 86vmin; height: 86vmin; animation-delay: 560ms; opacity: 0.4; }
+  @keyframes ringIn {
+    from { opacity: 0; transform: translate(-50%,-50%) scale(0.6) rotate(-6deg); }
+    to   { opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0); }
+  }
+  .net {
+    position: absolute; left: 8vw; right: 8vw; top: 52%;
+    height: 0; border-top: 2px dashed rgba(45,119,73,0.28);
+    transform-origin: left center;
+    animation: netDraw 900ms cubic-bezier(.2,.7,.3,1) 700ms both;
+  }
+  @keyframes netDraw {
+    from { transform: scaleX(0); opacity: 0; }
+    to   { transform: scaleX(1); opacity: 1; }
+  }
+
+  /* center stage */
+  .stage {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: grid; place-items: center;
+    text-align: center;
+  }
+
+  /* flying confetti — paddles, balls, net pieces */
+  .flier {
+    position: absolute;
+    will-change: transform, opacity;
+    opacity: 0;
+  }
+  .flier--paddle {
+    width: 50px; height: 60px;
+  }
+  .flier--ball {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f7ff7a, var(--ball) 50%, #b6cf28 100%);
+    box-shadow: 0 4px 10px -2px rgba(0,0,0,0.3),
+                inset -2px -3px 0 rgba(0,0,0,0.12);
+  }
+  .flier--ball::before {
+    content: ""; position: absolute; inset: 4px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle 1.5px at 30% 30%, rgba(0,0,0,0.18) 100%, transparent 0),
+      radial-gradient(circle 1.5px at 70% 30%, rgba(0,0,0,0.18) 100%, transparent 0),
+      radial-gradient(circle 1.5px at 50% 60%, rgba(0,0,0,0.18) 100%, transparent 0),
+      radial-gradient(circle 1.5px at 25% 75%, rgba(0,0,0,0.18) 100%, transparent 0),
+      radial-gradient(circle 1.5px at 75% 75%, rgba(0,0,0,0.18) 100%, transparent 0);
+  }
+  .flier--scribble {
+    width: 36px; height: 12px;
+    background: currentColor;
+    border-radius: 6px;
+    color: var(--paddle-green);
+  }
+
+  /* Mini paddle SVG-ish */
+  .mini-paddle {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+  .mini-paddle .face {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 80%;
+    border-radius: 50% 50% 44% 44%;
+    background: var(--c, var(--paddle-green));
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.18);
+  }
+  .mini-paddle .handle {
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 22%; height: 28%;
+    background: #2c1d12; border-radius: 2px;
+  }
+
+  /* word + tagline animation */
+  .center {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    padding: 0 24px;
+  }
+  .word {
+    font-family: "Faster One", cursive;
+    font-size: clamp(56px, 14vw, 168px);
+    line-height: 1;
+    letter-spacing: 2px;
+    color: var(--ink);
+    display: inline-flex;
+    overflow: hidden;
+  }
+  .word .ch {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: charUp 700ms cubic-bezier(.2,.9,.3,1.1) both;
+  }
+  .word .ch.dot {
+    color: var(--paddle-green);
+    background: var(--ball);
+    color: transparent;
+    border-radius: 50%;
+    width: 0.7em; height: 0.7em;
+    align-self: flex-end;
+    margin: 0 0.04em 0.06em;
+    box-shadow: inset -3px -4px 0 rgba(0,0,0,0.1);
+    animation: charUp 700ms cubic-bezier(.2,.9,.3,1.1) both, ballHop 1.2s ease-in-out 1.6s infinite;
+  }
+  @keyframes charUp {
+    from { transform: translateY(110%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes ballHop {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-12px); }
+  }
+
+  .tagline {
+    font-family: "Dela Gothic One", system-ui;
+    font-size: clamp(13px, 1.6vw, 18px);
+    letter-spacing: 4px;
+    color: var(--paddle-green);
+    opacity: 0;
+    animation: fadeUp 600ms ease 1100ms both;
+  }
+  .sub {
+    font-family: "Covered By Your Grace", cursive;
+    font-size: clamp(18px, 2.4vw, 26px);
+    color: var(--ink-soft);
+    opacity: 0;
+    animation: fadeUp 600ms ease 1300ms both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .pulse-bar {
+    margin-top: 26px;
+    width: clamp(180px, 30vw, 280px);
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 400ms ease 1500ms both;
+  }
+  .pulse-bar div {
+    height: 100%; width: 0%;
+    background: var(--paddle-green);
+    border-radius: 99px;
+    animation: barFill 2200ms cubic-bezier(.5,.05,.4,1) 1500ms forwards;
+  }
+  @keyframes barFill {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+
+  .skip {
+    position: fixed; top: 22px; right: 22px; z-index: 5;
+    appearance: none; border: 1.5px solid rgba(0,0,0,0.12);
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(6px);
+    color: var(--ink);
+    padding: 10px 16px; border-radius: 99px;
+    font-family: "Dela Gothic One", system-ui;
+    font-size: 11px; letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 160ms;
+    opacity: 0; animation: fadeUp 400ms ease 800ms both;
+  }
+  .skip:hover { background: var(--ink); color: white; border-color: var(--ink); }
+
+  /* exit transition */
+  body.is-exiting .stage,
+  body.is-exiting .bg {
+    animation: pageOut 480ms cubic-bezier(.5,0,.7,.2) forwards;
+  }
+  @keyframes pageOut {
+    to { opacity: 0; transform: scale(1.04); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 100ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+  <button class="skip" id="skip">SKIP →</button>
+
+  <div class="bg" aria-hidden="true">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="net"></div>
+  </div>
+
+  <div class="stage">
+    <div class="center">
+      <span class="tagline">PICKLEBALL · QUEUE · PLAY</span>
+      <span class="word" aria-label="PADDLEQ">
+        <span class="ch" style="animation-delay: 250ms">P</span>
+        <span class="ch" style="animation-delay: 320ms">A</span>
+        <span class="ch" style="animation-delay: 390ms">D</span>
+        <span class="ch" style="animation-delay: 460ms">D</span>
+        <span class="ch" style="animation-delay: 530ms">L</span>
+        <span class="ch" style="animation-delay: 600ms">E</span>
+        <span class="ch dot" style="animation-delay: 700ms"></span>
+      </span>
+      <span class="sub">queue up. play more.</span>
+      <div class="pulse-bar"><div></div></div>
+    </div>
+  </div>
+
+  <script>
+    // ─── flying confetti ──────────────────────────────────
+    const colors = ["#2D7749", "#C24A1E", "#1d72b8", "#7A3FB7", "#C7891B"];
+    const stage = document.body;
+
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function spawnFlier(kind, delay) {
+      const el = document.createElement("div");
+      el.className = "flier flier--" + kind;
+      // start from a random edge
+      const side = Math.floor(rand(0, 4));
+      let sx, sy, ex, ey;
+      const W = window.innerWidth, H = window.innerHeight;
+      const cx = W * 0.5, cy = H * 0.5;
+      if (side === 0) { sx = -120; sy = rand(0, H); }
+      else if (side === 1) { sx = W + 120; sy = rand(0, H); }
+      else if (side === 2) { sx = rand(0, W); sy = -120; }
+      else { sx = rand(0, W); sy = H + 120; }
+      // end somewhere out of view on the opposite side or near center burst
+      ex = cx + rand(-W*0.35, W*0.35);
+      ey = cy + rand(-H*0.35, H*0.35);
+
+      el.style.left = sx + "px";
+      el.style.top = sy + "px";
+
+      if (kind === "paddle") {
+        const c = colors[Math.floor(rand(0, colors.length))];
+        el.innerHTML = '<div class="mini-paddle"><div class="face" style="--c:' + c + '"></div><div class="handle"></div></div>';
+      } else if (kind === "scribble") {
+        el.style.color = colors[Math.floor(rand(0, colors.length))];
+        el.style.transform = "rotate(" + rand(-30,30) + "deg)";
+      }
+
+      stage.appendChild(el);
+
+      const dur = rand(1400, 2200);
+      const rotStart = rand(-180, 180);
+      const rotEnd = rotStart + rand(180, 540) * (Math.random() < 0.5 ? -1 : 1);
+      const scale = rand(0.6, 1.2);
+
+      el.animate(
+        [
+          { transform: `translate(0,0) rotate(${rotStart}deg) scale(${scale})`, opacity: 0 },
+          { opacity: 1, offset: 0.15 },
+          { opacity: 1, offset: 0.7 },
+          { transform: `translate(${ex - sx}px, ${ey - sy}px) rotate(${rotEnd}deg) scale(${scale * 0.6})`, opacity: 0 }
+        ],
+        { duration: dur, delay: delay, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }
+      ).onfinish = () => el.remove();
+    }
+
+    // burst of fliers
+    const burst = () => {
+      for (let i = 0; i < 12; i++) spawnFlier("paddle", 300 + i * 80);
+      for (let i = 0; i < 16; i++) spawnFlier("ball",   200 + i * 60);
+      for (let i = 0; i < 8;  i++) spawnFlier("scribble", 400 + i * 100);
+    };
+    burst();
+
+    // ─── auto-route + skip ────────────────────────────────
+    const HOME = "Home.html";
+    const TOTAL = 3700;
+    let routed = false;
+    function goHome() {
+      if (routed) return;
+      routed = true;
+      document.body.classList.add("is-exiting");
+      setTimeout(() => { window.location.href = HOME; }, 460);
+    }
+    setTimeout(goHome, TOTAL);
+    document.getElementById("skip").addEventListener("click", goHome);
+  </script>
+</body>
+</html>
