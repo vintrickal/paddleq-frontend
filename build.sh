@@ -14,6 +14,6 @@ echo "===> Getting dependencies..."
 flutter pub get
 
 echo "===> Building Flutter Web (release)..."
-flutter build web --release --dart-define=API_BASE_URL=https://paddleq-api-vince-grbqc7e9fjfra4g5.southeastasia-01.azurewebsites.net
+flutter build web --release --dart-define=PADDLEQ_API_BASE=https://paddleq-api-vince-grbqc7e9fjfra4g5.southeastasia-01.azurewebsites.net
 
 echo "===> Build complete. Output in build/web"
