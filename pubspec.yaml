@@ -14,7 +14,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
-  google_fonts: ^6.3.0
+  google_fonts: ^8.1.0
   http: ^1.2.2
   mobile_scanner: ^5.2.3
   qr_flutter: ^4.1.0
