@@ -145,6 +145,30 @@ class CompleteMatchRequest extends Equatable {
   List<Object?> get props => [winningTeam];
 }
 
+/// Body for `POST /api/matches/{id}/void` — cancels a match because one
+/// player became unavailable.
+///
+/// On the backend the unavailable player is moved to Resting, the rest
+/// return to Waiting, no W/L/games counters are incremented, and the
+/// court frees up.
+class VoidMatchRequest extends Equatable {
+  const VoidMatchRequest({required this.unavailablePlayerId, this.reason});
+
+  /// Public GUID of the player who can't continue.
+  final String unavailablePlayerId;
+
+  /// Optional explanation, max 500 chars.
+  final String? reason;
+
+  Map<String, dynamic> toJson() => {
+        'unavailablePlayerId': unavailablePlayerId,
+        if (reason != null) 'reason': reason,
+      };
+
+  @override
+  List<Object?> get props => [unavailablePlayerId, reason];
+}
+
 /// Mirrors `LeaderboardEntryResponse` — one row in the active-session
 /// leaderboard, pre-ranked by the backend (wins desc → winRate desc →
 /// gamesPlayed desc). Only includes players with at least one completed

@@ -156,6 +156,16 @@ class PaddleqApi {
     return MatchResponse.fromJson(json as Map<String, dynamic>);
   }
 
+  /// `POST /api/matches/{id}/void` — cancels an in-progress match where a
+  /// player became unavailable. No counters increment; the court frees up.
+  Future<MatchResponse> voidMatch(int id, VoidMatchRequest body) async {
+    final json = await _client.postJson(
+      '/api/matches/$id/void',
+      body: body.toJson(),
+    );
+    return MatchResponse.fromJson(json as Map<String, dynamic>);
+  }
+
   /// `GET /api/matches/{id}` — fetch a match by id.
   Future<MatchResponse> getMatch(int id) async {
     final json = await _client.getJson('/api/matches/$id');

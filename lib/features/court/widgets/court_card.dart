@@ -22,6 +22,7 @@ class CourtCard extends StatelessWidget {
     required this.match,
     required this.onWinner,
     required this.onQueue,
+    required this.onCancel,
   });
 
   final int idx;
@@ -31,6 +32,10 @@ class CourtCard extends StatelessWidget {
   final MatchResponse? match;
   final ValueChanged<int> onWinner;
   final VoidCallback onQueue;
+
+  /// Fired when the host taps the "Cancel match" link. Only meaningful
+  /// when [match] is non-null (live court).
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -79,12 +84,43 @@ class CourtCard extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(top: BorderSide(color: PaddleColors.line)),
             ),
-            padding: const EdgeInsets.all(14),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: _WinnerButton(team: 1, onTap: () => onWinner(1))),
-                const SizedBox(width: 8),
-                Expanded(child: _WinnerButton(team: 2, onTap: () => onWinner(2))),
+                Row(
+                  children: [
+                    Expanded(
+                        child:
+                            _WinnerButton(team: 1, onTap: () => onWinner(1))),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child:
+                            _WinnerButton(team: 2, onTap: () => onWinner(2))),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                Center(
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: PaddleColors.danger,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: onCancel,
+                    child: Text(
+                      'Cancel match',
+                      style: PaddleText.body(
+                        size: 12,
+                        weight: FontWeight.w700,
+                        color: PaddleColors.danger,
+                      ).copyWith(letterSpacing: 0.4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
               ],
             ),
           ),

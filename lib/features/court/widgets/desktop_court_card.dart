@@ -26,6 +26,7 @@ class DesktopCourtCard extends StatelessWidget {
     required this.match,
     required this.onWinner,
     required this.onQueue,
+    required this.onCancel,
   });
 
   final int idx;
@@ -34,6 +35,10 @@ class DesktopCourtCard extends StatelessWidget {
   final MatchResponse? match;
   final ValueChanged<int> onWinner;
   final VoidCallback onQueue;
+
+  /// Fired when the host taps the "Cancel match" link. Only meaningful
+  /// when [match] is non-null (live court).
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +64,28 @@ class DesktopCourtCard extends StatelessWidget {
           _DesktopMatch(team1: team1, team2: team2),
           const SizedBox(height: 10),
           _DesktopActions(onWinner: onWinner),
+          const SizedBox(height: 30),
+          Center(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: PaddleColors.danger,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                minimumSize: const Size(0, 28),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: onCancel,
+              child: Text(
+                'Cancel match',
+                style: PaddleText.body(
+                  size: 11,
+                  weight: FontWeight.w700,
+                  color: PaddleColors.danger,
+                ).copyWith(letterSpacing: 0.4),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
         ],
       ),
     );

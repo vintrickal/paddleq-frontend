@@ -5,6 +5,7 @@ import 'package:paddleq/core/theme/paddle_text.dart';
 import 'package:paddleq/core/widgets/paddle_icons.dart';
 import 'package:paddleq/features/court/cubit/court_cubit.dart';
 import 'package:paddleq/features/court/widgets/avatar.dart';
+import 'package:paddleq/features/court/widgets/player_info_dialog.dart';
 
 /// Fixed-width 360px right rail used in the iPad/desktop Court layout.
 ///
@@ -215,82 +216,100 @@ class _RailRowState extends State<_RailRow> {
   Widget build(BuildContext context) {
     final p = widget.player;
     final resting = p.status == PlayerStatus.resting;
+    final radius = BorderRadius.circular(12);
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
+      cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
         decoration: BoxDecoration(
           color: _hover ? PaddleColors.paddleGreenSoft : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: radius,
         ),
-        child: Opacity(
-          opacity: resting ? 0.55 : 1,
-          child: Row(
-            children: [
-              if (widget.rank != null)
-                SizedBox(
-                  width: 22,
-                  child: Text(
-                    '${widget.rank}',
-                    textAlign: TextAlign.center,
-                    style: PaddleText.display(
-                      size: 12,
-                      color: PaddleColors.inkFaint,
-                      height: 1,
-                    ),
-                  ),
-                ),
-              if (widget.rank != null) const SizedBox(width: 12),
-              Avatar(name: p.name),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: radius,
+          child: InkWell(
+            borderRadius: radius,
+            // Same popup as the mobile player list — showDialog with a
+            // BlocProvider.value wrap so the CourtCubit is in scope on the
+            // dialog route. Mirrors showCancelMatchDialog's pattern.
+            onTap: () => showPlayerInfoDialog(context, p),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+              child: Opacity(
+                opacity: resting ? 0.55 : 1,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            p.name,
-                            style: PaddleText.body(
-                              size: 14,
-                              weight: FontWeight.w700,
-                              height: 1.2,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                    if (widget.rank != null)
+                      SizedBox(
+                        width: 22,
+                        child: Text(
+                          '${widget.rank}',
+                          textAlign: TextAlign.center,
+                          style: PaddleText.display(
+                            size: 12,
+                            color: PaddleColors.inkFaint,
+                            height: 1,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${p.skill})',
-                          style: PaddleText.body(size: 14, color: PaddleColors.inkFaint),
-                        ),
-                      ],
+                      ),
+                    if (widget.rank != null) const SizedBox(width: 12),
+                    Avatar(name: p.name),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  p.name,
+                                  style: PaddleText.body(
+                                    size: 14,
+                                    weight: FontWeight.w700,
+                                    height: 1.2,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '(${p.skill})',
+                                style: PaddleText.body(
+                                    size: 14, color: PaddleColors.inkFaint),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          _StatusBadge(status: p.status),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    _StatusBadge(status: p.status),
+                    if (p.court != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: PaddleColors.paddleGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'C${p.court}',
+                          style: PaddleText.display(
+                                  size: 10, color: Colors.white, height: 1)
+                              .copyWith(letterSpacing: 0.5),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              if (p.court != null) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: PaddleColors.paddleGreen,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'C${p.court}',
-                    style: PaddleText.display(size: 10, color: Colors.white, height: 1)
-                        .copyWith(letterSpacing: 0.5),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),

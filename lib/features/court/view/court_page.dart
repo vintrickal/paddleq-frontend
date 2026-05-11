@@ -11,6 +11,7 @@ import 'package:paddleq/core/widgets/phone_frame.dart';
 import 'package:paddleq/features/court/cubit/court_cubit.dart';
 import 'package:paddleq/features/court/widgets/add_player_modal.dart';
 import 'package:paddleq/features/court/widgets/add_player_sheet.dart';
+import 'package:paddleq/features/court/widgets/cancel_match_dialog.dart';
 import 'package:paddleq/features/court/widgets/court_card.dart';
 import 'package:paddleq/features/court/widgets/leaderboard_section.dart';
 import 'package:paddleq/features/court/widgets/match_history_section.dart';
@@ -329,6 +330,7 @@ class _CourtsTab extends StatelessWidget {
             onWinner: (team) =>
                 _handleCompleteMatch(context, state.currentCourt, team),
             onQueue: () => _handleFormNextMatch(context),
+            onCancel: () => _handleCancelMatch(context, state.currentCourt),
           ),
           const SizedBox(height: 10),
           _Dots(
@@ -1012,6 +1014,7 @@ class _CourtsGrid extends StatelessWidget {
                 onWinner: (team) =>
                     _handleCompleteMatch(context, i + 1, team),
                 onQueue: () => _handleFormNextMatch(context),
+                onCancel: () => _handleCancelMatch(context, i + 1),
               ),
             ),
         ],
@@ -1342,4 +1345,17 @@ Future<void> _handleCompleteMatch(
     await showApiErrorDialog(context, e, title: "Couldn't record winner");
     await cubit.loadQueue();
   }
+}
+
+/// Opens the cancel-match confirmation modal for the match currently
+/// playing on [courtIdx]. If the local state has no record of a match on
+/// that court (race / stale), we silently fall back to a re-sync.
+Future<void> _handleCancelMatch(BuildContext context, int courtIdx) async {
+  final cubit = context.read<CourtCubit>();
+  final match = cubit.state.matchOnCourt(courtIdx);
+  if (match == null) {
+    await cubit.loadQueue();
+    return;
+  }
+  await showCancelMatchDialog(context, courtIdx: courtIdx, match: match);
 }

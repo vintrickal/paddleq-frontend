@@ -169,6 +169,34 @@ class CourtCubit extends Cubit<CourtState> {
     await loadQueue();
   }
 
+  /// `POST /api/matches/{id}/void` — cancels the match on [courtIdx]
+  /// because [unavailablePlayerId] can't continue. Backend moves that
+  /// player to Resting, returns the others to Waiting, and frees the
+  /// court without touching any W/L/games counters.
+  ///
+  /// No-ops with a flash if state has no record of a match on the
+  /// court. Re-throws [ApiException] for the view to surface.
+  Future<void> voidMatchOnCourt(
+    int courtIdx, {
+    required String unavailablePlayerId,
+    String? reason,
+  }) async {
+    final match = state.matchOnCourt(courtIdx);
+    if (match == null) {
+      _flash('No active match on court $courtIdx');
+      return;
+    }
+    await _api.voidMatch(
+      match.id,
+      VoidMatchRequest(
+        unavailablePlayerId: unavailablePlayerId,
+        reason: reason,
+      ),
+    );
+    _flash('Court $courtIdx — match cancelled');
+    await loadQueue();
+  }
+
   /// `POST /api/queue/check-in` — checks a player into the active session
   /// using their permanent QR code. Inserts the resulting player into the
   /// local list (or updates them if their playerId is already known).
