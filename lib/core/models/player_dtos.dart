@@ -65,6 +65,38 @@ class CreatePlayerRequest extends Equatable {
   List<Object?> get props => [name, skillLevel];
 }
 
+/// Mirrors `PlayerSearchResult` — one hit from `GET /api/players/search`.
+///
+/// Returns up to 20 case-insensitive name matches. When there's an active
+/// session, [currentQueueStatus] reflects the player's current state in
+/// that session (`Waiting` / `Playing` / `Resting` / `Finished` / `NoShow`),
+/// or null when the player isn't in the queue / there's no active session.
+class PlayerSearchResult extends Equatable {
+  const PlayerSearchResult({
+    required this.playerId,
+    required this.name,
+    required this.skillLevel,
+    required this.currentQueueStatus,
+  });
+
+  /// Public GUID — what the check-in-by-id endpoint expects.
+  final String playerId;
+  final String name;
+  final double skillLevel;
+  final String? currentQueueStatus;
+
+  factory PlayerSearchResult.fromJson(Map<String, dynamic> json) =>
+      PlayerSearchResult(
+        playerId: json['playerId'] as String,
+        name: (json['name'] ?? '') as String,
+        skillLevel: parseDouble(json['skillLevel']),
+        currentQueueStatus: json['currentQueueStatus'] as String?,
+      );
+
+  @override
+  List<Object?> get props => [playerId, name, skillLevel, currentQueueStatus];
+}
+
 /// Body for `PUT /api/players/{publicId}` — full replacement. Both fields
 /// are required: send the player's intended `name` and `skillLevel` every
 /// time, even if only one of them is changing. (Partial updates with

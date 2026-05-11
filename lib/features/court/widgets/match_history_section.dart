@@ -245,17 +245,3 @@ class _TeamBlock extends StatelessWidget {
   }
 }
 
-String _relativeTime(DateTime utc) {
-  final diff = DateTime.now().toUtc().difference(utc.toUtc());
-  if (diff.inSeconds < 60) return 'just now';
-  if (diff.inMinutes < 60) {
-    final m = diff.inMinutes;
-    return '${m}m ago';
-  }
-  if (diff.inHours < 24) {
-    final h = diff.inHours;
-    return '${h}h ago';
-  }
-  final d = diff.inDays;
-  return '${d}d ago';
-}

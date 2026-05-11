@@ -12,7 +12,6 @@ import 'package:paddleq/features/court/cubit/court_cubit.dart';
 import 'package:paddleq/features/court/widgets/add_player_modal.dart';
 import 'package:paddleq/features/court/widgets/add_player_sheet.dart';
 import 'package:paddleq/features/court/widgets/court_card.dart';
-import 'package:paddleq/features/court/widgets/court_name_label.dart';
 import 'package:paddleq/features/court/widgets/leaderboard_section.dart';
 import 'package:paddleq/features/court/widgets/match_history_section.dart';
 import 'package:paddleq/features/court/widgets/desktop_court_card.dart';

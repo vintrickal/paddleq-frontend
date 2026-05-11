@@ -162,6 +162,21 @@ class CheckInRequest extends Equatable {
   List<Object?> get props => [qrCode];
 }
 
+/// Body for `POST /api/queue/check-in-by-id` — manual check-in flow when
+/// the player has lost their QR code and is identified by their public id
+/// (e.g. via the name search).
+class CheckInByIdRequest extends Equatable {
+  const CheckInByIdRequest({required this.playerId});
+
+  /// Public GUID returned by `PlayerSearchResult.playerId`.
+  final String playerId;
+
+  Map<String, dynamic> toJson() => {'playerId': playerId};
+
+  @override
+  List<Object?> get props => [playerId];
+}
+
 /// Mirrors `CheckInResponse`.
 class CheckInResponse extends Equatable {
   const CheckInResponse({

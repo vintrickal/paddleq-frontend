@@ -187,6 +187,22 @@ class CourtCubit extends Cubit<CourtState> {
     return response;
   }
 
+  /// `POST /api/queue/check-in-by-id` — manual check-in when the player's
+  /// QR isn't available; we identified them via name search and use their
+  /// public id directly. Same local upsert + flash as the QR flow.
+  Future<CheckInResponse> checkInByPlayerId(String playerId) async {
+    final response =
+        await _api.checkInById(CheckInByIdRequest(playerId: playerId));
+    _upsertPlayer(Player(
+      id: response.playerId,
+      name: response.playerName,
+      skill: _formatSkill(response.skillLevel),
+      status: _statusFromResponse(response.status),
+    ));
+    _flash('${response.playerName} — checked in');
+    return response;
+  }
+
   /// `POST /api/queue/leave` — moves a Waiting player to Resting using
   /// their permanent QR code. Backend rejects this with 409 while the
   /// player is currently Playing; surfaced via [ApiException] for the view.

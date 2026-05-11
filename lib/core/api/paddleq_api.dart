@@ -31,6 +31,19 @@ class PaddleqApi {
     return PlayerResponse.fromJson(json as Map<String, dynamic>);
   }
 
+  /// `GET /api/players/search?name=...` — case-insensitive name search;
+  /// returns up to 20 matches with each player's current queue status
+  /// when an active session is running.
+  Future<List<PlayerSearchResult>> searchPlayers(String name) async {
+    final json = await _client.getJson(
+      '/api/players/search',
+      query: {'name': name},
+    );
+    return (json as List)
+        .map((e) => PlayerSearchResult.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
   /// `PUT /api/players/{publicId}` — partial update of a player's profile
   /// (name and/or skill level). Returns the updated [PlayerResponse].
   Future<PlayerResponse> updatePlayer(
@@ -93,6 +106,17 @@ class PaddleqApi {
   /// Idempotent for resting players (reactivates without duplicating).
   Future<CheckInResponse> checkIn(CheckInRequest body) async {
     final json = await _client.postJson('/api/queue/check-in', body: body.toJson());
+    return CheckInResponse.fromJson(json as Map<String, dynamic>);
+  }
+
+  /// `POST /api/queue/check-in-by-id` — manual check-in by player public id
+  /// (used when the QR code is unavailable and we identified the player
+  /// via name search). Same response shape and idempotency as `checkIn`.
+  Future<CheckInResponse> checkInById(CheckInByIdRequest body) async {
+    final json = await _client.postJson(
+      '/api/queue/check-in-by-id',
+      body: body.toJson(),
+    );
     return CheckInResponse.fromJson(json as Map<String, dynamic>);
   }
 
