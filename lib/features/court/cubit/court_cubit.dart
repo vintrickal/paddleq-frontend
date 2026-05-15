@@ -7,6 +7,7 @@ import 'package:paddleq/core/api/paddleq_api.dart';
 import 'package:paddleq/core/models/match_dtos.dart';
 import 'package:paddleq/core/models/player_dtos.dart';
 import 'package:paddleq/core/models/queue_dtos.dart';
+import 'package:paddleq/core/storage/court_names_store.dart';
 import 'package:paddleq/features/home/cubit/home_cubit.dart';
 
 part 'court_state.dart';
@@ -18,7 +19,9 @@ class CourtCubit extends Cubit<CourtState> {
     required int courtCount,
     String sessionName = '',
     int? sessionId,
+    CourtNamesStore? courtNamesStore,
   })  : _api = api,
+        _courtNamesStore = courtNamesStore ?? CourtNamesStore(),
         super(
           CourtState(
             mode: mode,
@@ -30,9 +33,23 @@ class CourtCubit extends Cubit<CourtState> {
             sessionName: sessionName,
             sessionId: sessionId,
           ),
-        );
+        ) {
+    if (sessionId != null) unawaited(_hydrateCourtNames(sessionId));
+  }
 
   final PaddleqApi _api;
+  final CourtNamesStore _courtNamesStore;
+
+  /// Pulls any previously-saved court labels for this session out of
+  /// SharedPreferences (which is `localStorage` on web). Only applies when
+  /// the user hasn't already started renaming during this run — we don't
+  /// want to clobber in-flight edits with a slow-loading hydration.
+  Future<void> _hydrateCourtNames(int sessionId) async {
+    final saved = await _courtNamesStore.load(sessionId);
+    if (isClosed || saved.isEmpty) return;
+    if (state.courtNames.isNotEmpty) return;
+    emit(state.copyWith(courtNames: saved));
+  }
   Timer? _flashTimer;
 
   void selectTab(CourtTab tab) => emit(state.copyWith(tab: tab));
@@ -55,7 +72,10 @@ class CourtCubit extends Cubit<CourtState> {
 
   /// Renames the court at [idx] for this session. Trimmed; an empty name
   /// clears the override and the UI reverts to the default `Court N` label.
-  /// In-memory only — not persisted to the backend.
+  ///
+  /// Persisted to [CourtNamesStore] keyed by [CourtState.sessionId] so the
+  /// rename survives browser refreshes. The backend doesn't know about
+  /// court labels — this is purely a client-side convenience.
   void renameCourt(int idx, String name) {
     final trimmed = name.trim();
     final next = Map<int, String>.from(state.courtNames);
@@ -65,6 +85,9 @@ class CourtCubit extends Cubit<CourtState> {
       next[idx] = trimmed;
     }
     emit(state.copyWith(courtNames: next));
+
+    final id = state.sessionId;
+    if (id != null) unawaited(_courtNamesStore.save(id, next));
   }
 
   /// Pulls the current session snapshot from the server in one shot:

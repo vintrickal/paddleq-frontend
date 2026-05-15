@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paddleq/core/api/api_exception.dart';
 import 'package:paddleq/core/api/paddleq_api.dart';
+import 'package:paddleq/core/models/match_dtos.dart';
 import 'package:paddleq/core/models/session_dtos.dart';
+import 'package:paddleq/core/storage/past_sessions_store.dart';
 import 'package:paddleq/core/theme/paddle_colors.dart';
 import 'package:paddleq/core/theme/paddle_text.dart';
 import 'package:paddleq/core/widgets/api_error_dialog.dart';
@@ -21,7 +23,9 @@ import 'package:paddleq/features/court/widgets/player_rail.dart';
 import 'package:paddleq/features/court/widgets/player_row.dart';
 import 'package:paddleq/features/court/widgets/qr_scan_sheet.dart';
 import 'package:paddleq/features/home/cubit/home_cubit.dart';
+import 'package:paddleq/features/home/cubit/past_sessions_cubit.dart';
 import 'package:paddleq/features/home/view/home_page.dart';
+import 'package:paddleq/features/leaderboard/view/leaderboard_page.dart';
 
 const double _desktopBreakpoint = 768;
 
@@ -1130,11 +1134,17 @@ void _navigateBackOrHome(BuildContext context) {
   }
 }
 
-/// Shows the destructive confirmation modal; if confirmed, fires
-/// `POST /api/sessions/{id}/end` and pops the Court page on success.
+/// Shows the destructive confirmation modal; on confirm:
+///   1. snapshots the in-memory leaderboard + session metadata,
+///   2. fires `POST /api/sessions/{id}/end`,
+///   3. records the resulting [PastSession] in [PastSessionsCubit] /
+///      `localStorage` (the leaderboard endpoint can't be re-queried for
+///      a closed session, so we have to capture before-and-after here),
+///   4. routes to [LeaderboardPage], clearing the back stack so the host
+///      can't accidentally navigate back into the dead session.
 ///
-/// On 409 (matches in progress) and other errors, the backend `message`
-/// is surfaced via [showApiErrorDialog].
+/// On 409 (matches still in progress) and other errors the backend
+/// `message` surfaces via [showApiErrorDialog] and the Court page stays.
 Future<void> _confirmAndEndSession(BuildContext context, int sessionId) async {
   final confirmed = await showDialog<bool>(
         context: context,
@@ -1144,11 +1154,31 @@ Future<void> _confirmAndEndSession(BuildContext context, int sessionId) async {
   if (!confirmed || !context.mounted) return;
 
   final api = context.read<PaddleqApi>();
+  final pastSessions = context.read<PastSessionsCubit>();
+  final cubit = context.read<CourtCubit>();
+  final snapshot = cubit.state;
+  // Capture the leaderboard *before* hitting the endpoint — the server
+  // will refuse to return it for a closed session.
+  final leaderboardSnapshot =
+      List<LeaderboardEntryResponse>.unmodifiable(snapshot.leaderboard);
 
   try {
-    await api.endSession(sessionId);
+    final closed = await api.endSession(sessionId);
+    final past = PastSession(
+      sessionId: closed.id,
+      name: closed.name,
+      matchType: closed.matchType,
+      numberOfCourts: closed.numberOfCourts,
+      startedAt: closed.startedAt,
+      endedAt: closed.endedAt ?? DateTime.now().toUtc(),
+      leaderboard: leaderboardSnapshot,
+    );
+    await pastSessions.recordSession(past);
     if (!context.mounted) return;
-    _navigateBackOrHome(context);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => LeaderboardPage(session: past)),
+      (route) => false,
+    );
   } on ApiException catch (e) {
     if (!context.mounted) return;
     await showApiErrorDialog(context, e, title: "Couldn't end session");

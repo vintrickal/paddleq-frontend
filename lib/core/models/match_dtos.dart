@@ -209,6 +209,17 @@ class LeaderboardEntryResponse extends Equatable {
         winRate: parseDouble(json['winRate']),
       );
 
+  Map<String, dynamic> toJson() => {
+        'rank': rank,
+        'playerId': playerId,
+        'playerName': playerName,
+        'skillLevel': skillLevel,
+        'wins': wins,
+        'losses': losses,
+        'gamesPlayed': gamesPlayed,
+        'winRate': winRate,
+      };
+
   @override
   List<Object?> get props => [
         rank,

@@ -16,6 +16,7 @@ import 'package:paddleq/features/home/widgets/courts_counter.dart';
 import 'package:paddleq/features/home/widgets/highlight_text.dart';
 import 'package:paddleq/features/home/widgets/mode_tile.dart';
 import 'package:paddleq/features/home/widgets/session_name_field.dart';
+import 'package:paddleq/features/home/widgets/past_sessions_section.dart';
 import 'package:paddleq/features/home/widgets/setup_cta.dart';
 import 'package:paddleq/features/home/widgets/step_label.dart';
 import 'package:paddleq/features/home/widgets/summary_tiles.dart';
@@ -168,6 +169,8 @@ class _MobileHome extends StatelessWidget {
                       const StepLabel(step: 3, text: 'Or jump back in'),
                       _RecentSession(onTap: () => _startSetupFlow(context, state)),
                     ],
+                    const SizedBox(height: 22),
+                    const PastSessionsSection(),
                   ],
                 ),
               ),
@@ -415,6 +418,13 @@ class _DesktopHome extends StatelessWidget {
                                 totalPlayers: state.totalPlayers,
                                 variant: SummaryVariant.desktop,
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 720),
+                              child: const PastSessionsSection(),
                             ),
                           ),
                           const SizedBox(height: 40),
