@@ -333,7 +333,8 @@ class _CourtsTab extends StatelessWidget {
             match: state.matchOnCourt(state.currentCourt),
             onWinner: (team) =>
                 _handleCompleteMatch(context, state.currentCourt, team),
-            onQueue: () => _handleFormNextMatch(context),
+            onQueue: () =>
+                _handleFormNextMatch(context, state.currentCourt),
             onCancel: () => _handleCancelMatch(context, state.currentCourt),
           ),
           const SizedBox(height: 10),
@@ -1017,7 +1018,7 @@ class _CourtsGrid extends StatelessWidget {
                 match: state.matchOnCourt(i + 1),
                 onWinner: (team) =>
                     _handleCompleteMatch(context, i + 1, team),
-                onQueue: () => _handleFormNextMatch(context),
+                onQueue: () => _handleFormNextMatch(context, i + 1),
                 onCancel: () => _handleCancelMatch(context, i + 1),
               ),
             ),
@@ -1323,28 +1324,46 @@ class _QueueErrorBanner extends StatelessWidget {
 // MATCH ACTIONS — form-next + complete
 // ===========================================================================
 
-/// Tries `POST /api/matches/next`. On a 409 with a skill-related message,
-/// silently retries once with `?allowSkillMix=true` — the cubit's success
-/// flash already calls out that skill mix kicked in, so the host doesn't
-/// lose track. Non-skill 409s (no session, all courts in use) and other
-/// errors land in the standard error dialog.
-Future<void> _handleFormNextMatch(BuildContext context) async {
+/// Tries `POST /api/matches/next`, pinning the assignment to [courtIdx] so
+/// tapping "Queue Players" on a specific court actually puts the match
+/// on that court (otherwise the matchmaker picks the lowest free court).
+///
+/// On a 409 with a skill-related message, silently retries once with
+/// `?allowSkillMix=true` — the cubit's success flash already calls out
+/// that skill mix kicked in, so the host doesn't lose track. Non-skill
+/// 409s (no session, court already in use, etc.) and other errors land
+/// in the standard error dialog.
+Future<void> _handleFormNextMatch(BuildContext context, int courtIdx) async {
   final cubit = context.read<CourtCubit>();
-  await _attemptFormMatch(context, cubit, allowSkillMix: false);
+  await _attemptFormMatch(
+    context,
+    cubit,
+    courtIdx: courtIdx,
+    allowSkillMix: false,
+  );
 }
 
 Future<void> _attemptFormMatch(
   BuildContext context,
   CourtCubit cubit, {
+  required int courtIdx,
   required bool allowSkillMix,
 }) async {
   try {
-    await cubit.formNextMatch(allowSkillMix: allowSkillMix);
+    await cubit.formNextMatch(
+      allowSkillMix: allowSkillMix,
+      courtNumber: courtIdx,
+    );
   } on ApiException catch (e) {
     if (!context.mounted) return;
     if (e.isConflict && !allowSkillMix && _looksRetryable(e.message)) {
       // Auto-promote to skill-mix and retry — no popup.
-      await _attemptFormMatch(context, cubit, allowSkillMix: true);
+      await _attemptFormMatch(
+        context,
+        cubit,
+        courtIdx: courtIdx,
+        allowSkillMix: true,
+      );
     } else {
       await showApiErrorDialog(context, e, title: "Couldn't form match");
     }

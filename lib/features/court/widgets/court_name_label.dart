@@ -73,98 +73,134 @@ Future<void> _renameCourt(BuildContext context, int idx, String current) async {
   await showDialog<void>(
     context: context,
     builder: (ctx) {
-      return AlertDialog(
+      // A plain Dialog (not AlertDialog) so we lay out the buttons in a
+      // real Row — AlertDialog renders its `actions` in an OverflowBar,
+      // and an OverflowBar isn't a Flex parent, so the `Spacer` we used
+      // to push Reset to the left collapses badly in release builds
+      // (the whole content area drops to zero and the actions wrap up
+      // next to the title). Doing the layout by hand avoids all that.
+      return Dialog(
         backgroundColor: PaddleColors.tile,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          'Rename court',
-          style: PaddleText.display(size: 18, height: 1.1),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Names are saved for this session only.',
-              style: PaddleText.body(
-                  size: 12, color: PaddleColors.inkSoft, height: 1.4),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 30,
-              style: PaddleText.body(size: 15, weight: FontWeight.w700),
-              decoration: InputDecoration(
-                hintText: defaultName,
-                hintStyle: PaddleText.body(
-                    size: 15, color: PaddleColors.inkFaint, weight: FontWeight.w700),
-                filled: true,
-                fillColor: Colors.white,
-                counterText: '',
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: PaddleColors.line, width: 1.5),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Rename court',
+                        style: PaddleText.display(size: 18, height: 1.1),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: PaddleColors.inkSoft,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        cubit.renameCourt(idx, '');
+                        Navigator.of(ctx).pop();
+                      },
+                      child: Text(
+                        'Reset',
+                        style: PaddleText.display(
+                            size: 13,
+                            color: PaddleColors.inkSoft,
+                            height: 1),
+                      ),
+                    ),
+                  ],
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: PaddleColors.paddleGreen, width: 1.5),
+                const SizedBox(height: 4),
+                Text(
+                  'Names are saved for this session only.',
+                  style: PaddleText.body(
+                      size: 12, color: PaddleColors.inkSoft, height: 1.4),
                 ),
-              ),
-              onSubmitted: (value) {
-                cubit.renameCourt(idx, value);
-                Navigator.of(ctx).pop();
-              },
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  maxLength: 30,
+                  style: PaddleText.body(size: 15, weight: FontWeight.w700),
+                  decoration: InputDecoration(
+                    hintText: defaultName,
+                    hintStyle: PaddleText.body(
+                        size: 15,
+                        color: PaddleColors.inkFaint,
+                        weight: FontWeight.w700),
+                    filled: true,
+                    fillColor: Colors.white,
+                    counterText: '',
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: PaddleColors.line, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: PaddleColors.paddleGreen, width: 1.5),
+                    ),
+                  ),
+                  onSubmitted: (value) {
+                    cubit.renameCourt(idx, value);
+                    Navigator.of(ctx).pop();
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(
+                        'Cancel',
+                        style: PaddleText.display(
+                            size: 14,
+                            color: PaddleColors.inkSoft,
+                            height: 1),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: PaddleColors.paddleGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        cubit.renameCourt(idx, controller.text);
+                        Navigator.of(ctx).pop();
+                      },
+                      child: Text(
+                        'Save',
+                        style: PaddleText.display(
+                            size: 14, color: Colors.white, height: 1),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 12, 12),
-        actions: [
-          TextButton(
-            onPressed: () {
-              cubit.renameCourt(idx, '');
-              Navigator.of(ctx).pop();
-            },
-            child: Text(
-              'Reset',
-              style: PaddleText.display(
-                  size: 13, color: PaddleColors.inkSoft, height: 1),
-            ),
-          ),
-          const Spacer(),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Cancel',
-              style: PaddleText.display(
-                  size: 14, color: PaddleColors.inkSoft, height: 1),
-            ),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: PaddleColors.paddleGreen,
-              foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              cubit.renameCourt(idx, controller.text);
-              Navigator.of(ctx).pop();
-            },
-            child: Text(
-              'Save',
-              style: PaddleText.display(
-                  size: 14, color: Colors.white, height: 1),
-            ),
-          ),
-        ],
       );
     },
   );

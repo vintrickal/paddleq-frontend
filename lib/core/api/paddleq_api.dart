@@ -137,12 +137,23 @@ class PaddleqApi {
 
   /// `POST /api/matches/next` — form the next match.
   ///
+  /// When [courtNumber] is supplied, the backend pins the match to that
+  /// specific court (the host tapped a particular empty court and expects
+  /// it to be the assignment). Omitted → backend picks the lowest free
+  /// court automatically.
+  ///
   /// On 409, the backend message hints whether retrying with [allowSkillMix]
   /// could succeed. UI should surface this for a one-tap retry button.
-  Future<FormMatchResponse> formNextMatch({bool allowSkillMix = false}) async {
+  Future<FormMatchResponse> formNextMatch({
+    bool allowSkillMix = false,
+    int? courtNumber,
+  }) async {
     final json = await _client.postJson(
       '/api/matches/next',
-      query: {'allowSkillMix': allowSkillMix},
+      query: {
+        'allowSkillMix': allowSkillMix,
+        if (courtNumber != null) 'courtNumber': courtNumber,
+      },
     );
     return FormMatchResponse.fromJson(json as Map<String, dynamic>);
   }

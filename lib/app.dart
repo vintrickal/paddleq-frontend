@@ -3,13 +3,24 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paddleq/core/api/paddleq_api.dart';
 import 'package:paddleq/core/theme/app_theme.dart';
 import 'package:paddleq/features/home/cubit/past_sessions_cubit.dart';
+import 'package:paddleq/features/player_profile/view/player_profile_page.dart';
 import 'package:paddleq/features/welcome/view/welcome_page.dart';
 
 class PaddleQApp extends StatelessWidget {
-  const PaddleQApp({super.key});
+  const PaddleQApp({super.key, this.initialPlayerProfileId});
+
+  /// When non-null, the app boots straight into [PlayerProfilePage] with
+  /// this `publicId`. Set by `main()` from a `/p/<publicId>` deep link.
+  /// Otherwise the regular host flow (Welcome → Home → Court) takes over.
+  final String? initialPlayerProfileId;
 
   @override
   Widget build(BuildContext context) {
+    final profileId = initialPlayerProfileId;
+    final home = profileId != null
+        ? PlayerProfilePage(publicId: profileId)
+        : const WelcomePage();
+
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<PaddleqApi>(create: (_) => PaddleqApi()),
@@ -23,7 +34,7 @@ class PaddleQApp extends StatelessWidget {
           title: 'PaddleQ',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
-          home: const WelcomePage(),
+          home: home,
         ),
       ),
     );

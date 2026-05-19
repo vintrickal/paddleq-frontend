@@ -35,7 +35,14 @@ class MatchHistorySection extends StatelessWidget {
           else
             for (var i = 0; i < matches.length; i++) ...[
               if (i > 0) const Divider(height: 1, color: PaddleColors.line),
-              _HistoryRow(match: matches[i]),
+              // The list arrives newest-first from the server, but the
+              // display number should be stable as new matches are added
+              // (oldest match keeps #1, newest gets the highest number).
+              // So number = total - index.
+              _HistoryRow(
+                match: matches[i],
+                number: matches.length - i,
+              ),
             ],
         ],
       ),
@@ -98,8 +105,13 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _HistoryRow extends StatelessWidget {
-  const _HistoryRow({required this.match});
+  const _HistoryRow({required this.match, required this.number});
   final MatchResponse match;
+
+  /// 1-indexed display number — oldest match is #1, newest gets the highest
+  /// number. Stays stable as new matches arrive (new ones push above with
+  /// a larger number rather than renumbering everything below).
+  final int number;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +126,23 @@ class _HistoryRow extends StatelessWidget {
         children: [
           Row(
             children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: PaddleColors.paddleGreen,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '#$number',
+                  style: PaddleText.display(
+                    size: 10,
+                    color: Colors.white,
+                    height: 1,
+                  ).copyWith(letterSpacing: 0.6),
+                ),
+              ),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(

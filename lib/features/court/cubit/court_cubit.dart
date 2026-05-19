@@ -156,14 +156,24 @@ class CourtCubit extends Cubit<CourtState> {
   }
 
   /// `POST /api/matches/next` — asks the matchmaker to form the next match.
-  /// Backend picks the players and the court automatically.
+  ///
+  /// When [courtNumber] is supplied, the backend pins the match to that
+  /// specific court. This is what the host expects when they tap "Queue
+  /// Players" on a particular empty court card (otherwise the matchmaker
+  /// would silently put the new match on the lowest-numbered free court).
+  /// Omitted → backend picks the lowest free court itself.
   ///
   /// On success the cubit refreshes the snapshot so the new match appears
-  /// on the court the backend picked. Re-throws [ApiException] so the view
-  /// can present the skill-mix retry dialog on a 409.
-  Future<FormMatchResponse> formNextMatch({bool allowSkillMix = false}) async {
-    final response =
-        await _api.formNextMatch(allowSkillMix: allowSkillMix);
+  /// on the assigned court. Re-throws [ApiException] so the view can
+  /// present the skill-mix retry dialog on a 409.
+  Future<FormMatchResponse> formNextMatch({
+    bool allowSkillMix = false,
+    int? courtNumber,
+  }) async {
+    final response = await _api.formNextMatch(
+      allowSkillMix: allowSkillMix,
+      courtNumber: courtNumber,
+    );
     final court = response.match.courtNumber;
     _flash(response.usedSkillMix
         ? 'Match formed (skill mix · court $court)'

@@ -204,11 +204,17 @@ class _QrScanSheetState extends State<_QrScanSheet> {
           await context.read<CourtCubit>().checkInByPlayerId(result.playerId);
       if (!mounted) return;
       _showBanner(_BannerKind.success, '${response.playerName} — checked in');
-      // Refresh search so the row's status badge updates to "Waiting".
-      final query = _searchCtrl.text.trim();
-      if (query.length >= _minSearchLen) {
-        unawaited(_runSearch(query));
-      }
+      // Wipe the search so the host is ready to look up the next player.
+      // Any in-flight debounce is cancelled (its token won't match anymore)
+      // and the results list collapses back to the type-to-search hint.
+      _debounce?.cancel();
+      _searchCtrl.clear();
+      _searchToken++;
+      setState(() {
+        _results = const [];
+        _searchError = null;
+        _searching = false;
+      });
     } on ApiException catch (e) {
       if (!mounted) return;
       _showBanner(_BannerKind.error, e.message);
